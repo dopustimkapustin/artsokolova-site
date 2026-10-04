@@ -199,6 +199,8 @@ ${hero ? `<meta property="og:image" content="${hero.large}">` : ''}
 </body>
 </html>`;
   await fs.writeFile(path.join(DIST, 'index.html'), html);
+  // demo pages (e.g. hover-demo.html): IMG -> a real artwork image
+  try { const demo = await fs.readFile(path.join(ROOT, 'pages/hover-demo.html'), 'utf8'); const im = await processImage('twelve-months-1'); await fs.writeFile(path.join(DIST, 'hover-demo.html'), demo.replaceAll('IMG', im.large)); } catch {}
   console.log(`built: ${viewer.length} works, ${imgCache.size} images`);
 }
 
