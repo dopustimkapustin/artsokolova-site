@@ -1,0 +1,57 @@
+name: Sync from Notion & deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 * * * *'   # every hour
+  workflow_dispatch: {}     # "Run workflow" button = update now
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --omit=dev
+      - name: Sync from Notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: npm run sync
+      - name: Save content changes
+        run: |
+          git config user.name "site-bot"
+          git config user.email "site-bot@users.noreply.github.com"
+          git add content
+          git diff --cached --quiet || (git commit -m "Content update from Notion" && git push)
+      - uses: actions/cache@v4
+        with:
+          path: dist/img
+          key: img-${{ hashFiles('content/originals/**') }}
+          restore-keys: img-
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.d.outputs.page_url }}
+    steps:
+      - id: d
+        uses: actions/deploy-pages@v4

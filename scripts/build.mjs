@@ -191,7 +191,6 @@ ${T.artfinder ? `<a class="follow" href="${esc(T.artfinder)}" target="_blank" re
 </body>
 </html>`;
   await fs.writeFile(path.join(DIST, 'index.html'), html);
-  await fs.writeFile(path.join(DIST, 'CNAME'), 'artsokolova.com\n');
   console.log(`built: ${lightbox.length} works, ${imgCache.size} images`);
 }
 
@@ -244,7 +243,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .row.c4{grid-template-columns:repeat(4,1fr)}
 .row.c3{grid-template-columns:repeat(3,1fr)}
 .row.c2{grid-template-columns:repeat(2,1fr);max-width:1060px;gap:56px}
-.row.c1{grid-template-columns:1fr;max-width:620px}
+.row.c1{grid-template-columns:1fr;max-width:520px}
 .row.small{max-width:900px}
 .row.small.c4{max-width:1100px}
 .open{position:relative;display:block;width:100%;cursor:zoom-in}
