@@ -284,7 +284,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .pic{position:relative;border-radius:0;transition:border-radius .55s var(--ease)}.pic img{width:100%;height:100%;object-fit:cover;transition:transform .9s var(--ease)}
 .pic:hover{border-radius:${u(18)}}.pic:hover img{transform:scale(1.03)}
 @media (hover:hover) and (pointer:fine){.pic{cursor:none}}
-.cursor{position:fixed;left:0;top:0;z-index:40;pointer-events:none;padding:${u(8)} ${u(18)} ${u(7)};border:1px solid #000;border-radius:999px;background:#fff;font-size:${u(12)};letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;line-height:1;opacity:0;transform:translate(-50%,-50%) scale(.6);transition:opacity .25s,transform .35s var(--ease)}
+.cursor{position:fixed;left:0;top:0;z-index:40;pointer-events:none;padding:${u(8)} ${u(18)} ${u(7)};border:1px solid #000;border-radius:999px;background:#000;color:#fff;font-size:${u(12)};letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;line-height:1;opacity:0;transform:translate(-50%,-50%) scale(.6);transition:opacity .25s,transform .35s var(--ease)}
 .cursor.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
 figcaption{display:flex;justify-content:space-between;align-items:flex-start;gap:${u(16)};font-size:${u(14)};line-height:1.35;color:var(--ink2)}
 .cap-l{display:flex;flex-direction:column;gap:${u(4)};min-width:0}
@@ -405,13 +405,12 @@ if(ar){const c3=ar.querySelector('.ar-3d'),ifr=ar.querySelector('iframe'),dots=[
     c3.style.setProperty('--c',ease(cl((p-.12)/.25)));
     dots.forEach((d,i)=>d.style.setProperty('--t',ease(cl((p-.3-i*.07)/.22))))}
   addEventListener('scroll',()=>{if(!tick){tick=true;requestAnimationFrame(upd)}},{passive:true});addEventListener('resize',upd);upd()}
-// hover label that follows the cursor (Haus-style, letters scramble in)
+// hover label that follows the cursor (Haus-style)
 const cur=document.querySelector('.cursor');
-if(cur&&matchMedia('(hover: hover) and (pointer: fine)').matches){const WORD='View work',CH='ABCDEFGHIJKLMNOPQRSTUVWXYZ';let x=0,y=0,cx=0,cy=0,raf=0,scr=0;
+if(cur&&matchMedia('(hover: hover) and (pointer: fine)').matches){let x=0,y=0,cx=0,cy=0,raf=0;
   addEventListener('mousemove',e=>{x=e.clientX;y=e.clientY;if(!raf)raf=requestAnimationFrame(move)},{passive:true});
   function move(){cx+=(x-cx)*.25;cy+=(y-cy)*.25;cur.style.left=cx+'px';cur.style.top=cy+'px';raf=(Math.abs(x-cx)+Math.abs(y-cy)>.5)?requestAnimationFrame(move):0}
-  function scramble(){clearInterval(scr);let f=0;scr=setInterval(()=>{f++;cur.textContent=[...WORD].map((c,i)=>c===' '?' ':i<f/2?c:CH[Math.random()*26|0]).join('');if(f>=WORD.length*2){clearInterval(scr);cur.textContent=WORD}},28)}
-  document.querySelectorAll('.pic').forEach(p=>{p.addEventListener('mouseenter',e=>{cx=x=e.clientX;cy=y=e.clientY;move();cur.classList.add('on');scramble()});p.addEventListener('mouseleave',()=>cur.classList.remove('on'))})}
+  document.querySelectorAll('.pic').forEach(p=>{p.addEventListener('mouseenter',e=>{cx=x=e.clientX;cy=y=e.clientY;move();cur.classList.add('on')});p.addEventListener('mouseleave',()=>cur.classList.remove('on'))})}
 // slideshow
 const W=window.WORKS,lb=document.querySelector('.lb'),im=lb.querySelector('.lb-stage img'),t=lb.querySelector('.lb-cap .t'),pr=lb.querySelector('.lb-cap .pr'),m=lb.querySelector('.lb-cap .m'),inq=lb.querySelector('.inq');let i=0,j=0;
 function show(){const w=W[i],x=w.imgs[j];im.src=x.src;im.width=x.w;im.height=x.h;im.alt=w.title;t.textContent=w.title+(w.year?', '+w.year:'');pr.textContent=w.sold?'Sold':w.price;m.textContent=[w.size&&w.size+' in',w.medium,w.note].filter(Boolean).join(' · ');inq.style.display=w.sold?'none':'';inq.href='mailto:'+window.EMAIL+'?subject='+encodeURIComponent('Inquiry: '+w.title);history.replaceState(null,'','#'+w.slug);const n=W[(i+1)%W.length];if(n){new Image().src=n.imgs[0].src}}
