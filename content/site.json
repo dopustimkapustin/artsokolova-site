@@ -487,7 +487,8 @@
       "status": "Available",
       "images": [
         "balance-04"
-      ]
+      ],
+      "layout": "row-center"
     },
     {
       "title": "Balance 05",
@@ -527,7 +528,8 @@
       "note": "Edition of 10, price per print",
       "images": [
         "balance-07"
-      ]
+      ],
+      "joinPrev": true
     },
     {
       "title": "Memories No. 1",

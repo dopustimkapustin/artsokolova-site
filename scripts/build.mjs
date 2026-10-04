@@ -49,7 +49,7 @@ const img = (im, alt, sizes, extra = '') => im ? `<img src="${im.src}" srcset="$
 // (L = 36in+ on the long side, M = 17–35in, S = up to 16in). Each group gets one
 // of the compositions used in the Figma design. A work can force a new group with
 // a specific composition via its "layout" field (set in Notion).
-const LAYOUTS = ['grid4', 'pair-wide', 'pair-right', 'single', 'trio-full', 'trio-center'];
+const LAYOUTS = ['grid4', 'pair-wide', 'pair-right', 'single', 'trio-full', 'trio-center', 'row-center'];
 const sizeClass = size => { const d = Math.max(...dims(size), 0); return !d ? 'M' : d >= 36 ? 'L' : d <= 16 ? 'S' : 'M'; };
 function autoLayout(cls, n) {
   if (n === 1) return 'single';
@@ -72,13 +72,14 @@ function groupWorks(works) {
     const cls = sizeClass(w.size);
     const forced = LAYOUTS.includes(w.layout) ? w.layout : null;
     const last = groups[groups.length - 1];
-    if (last && !forced && last.cls === cls) last.items.push(w);
+    if (last && w.joinPrev) last.items.push(w);
+    else if (last && !forced && last.cls === cls) last.items.push(w);
     else groups.push({ cls, forced, items: [w] });
   }
   const rows = [];
   for (const g of groups) {
     const layout = g.forced || autoLayout(g.cls, g.items.length);
-    const per = { grid4: 4, 'pair-wide': 2, 'pair-right': 2, single: 1, 'trio-full': 3, 'trio-center': 3 }[layout];
+    const per = { grid4: 4, 'pair-wide': 2, 'pair-right': 2, single: 1, 'trio-full': 3, 'trio-center': 3, 'row-center': 99 }[layout];
     for (const items of chunk(g.items, per)) {
       const l = items.length === per ? layout : items.length === 1 ? 'single' : layout === 'trio-full' ? 'pair-wide' : layout === 'trio-center' ? 'pair-right' : layout;
       rows.push({ layout: l, items });
@@ -120,7 +121,8 @@ async function build() {
       const i = viewer.length, im = w.imgs[0];
       const sold = w.status === 'Sold';
       viewer.push({ slug: w.slug, title: w.title, year: w.year, size: w.size, medium: w.medium, note: w.note || '', price: !sold && w.status === 'Available' ? money(w.price) : '', sold, imgs: w.imgs.map(x => ({ src: x.large, w: x.w, h: x.h })) });
-      const flex = r.width ? ` style="width:${u(r.width)}"` : r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
+      const rc = r.layout === 'row-center' ? (() => { const f = r.items[0].imgs[0]; const H = 288 * f.h / f.w; return ` style="width:${u(H * im.w / im.h)}"`; })() : '';
+      const flex = rc ? rc : r.width ? ` style="width:${u(r.width)}"` : r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
       return `<figure class="work reveal" id="${w.slug}"${flex}>
   <button class="pic${w.shape === 'round' ? ' round' : ''}" data-i="${i}" aria-label="Open ${esc(w.title)}" style="aspect-ratio:${w.shape === 'round' ? '1/1' : im.w + '/' + im.h}">${img(im, `${w.title}, ${w.year || ''}`, SIZES[r.layout])}</button>
   <figcaption><div class="cap-l"><p class="t">${esc(w.title)}</p>${!sold && w.status === 'Available' && w.price ? `<p class="t">${money(w.price)}</p>` : ''}${sold ? '<p class="sold"><span class="dot"></span>Sold</p>' : ''}</div><div class="cap-r"><p>${esc(w.size ? w.size + ' in' : '')}</p><p>${esc(w.medium)}</p>${w.note ? `<p>${esc(w.note)}</p>` : ''}</div></figcaption>
@@ -291,6 +293,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .row.trio-full .work{flex:1 1 0}
 .row.trio-center{justify-content:center;gap:${u(32)}}
 .row.trio-center .work{width:${u(288)}}
+.row.row-center{justify-content:center;gap:${u(32)}}
 .work{display:flex;flex-direction:column;gap:${u(16)}}
 .pic{display:block;width:100%;overflow:hidden;cursor:zoom-in;background:#f3f3f3}
 .pic{position:relative;border-radius:0;transition:border-radius .55s var(--ease)}.pic img{width:100%;height:100%;object-fit:cover;transition:transform .9s var(--ease)}
@@ -379,9 +382,9 @@ footer{margin-top:${u(120)};padding-bottom:${u(20)};display:flex;flex-direction:
   .work-head{height:64px;margin-top:56px}
   .works,.series{gap:64px}
   .works{margin-top:40px}
-  .row,.row.grid4,.row.pair-right,.row.trio-full,.row.trio-center{flex-wrap:wrap;gap:28px 12px;justify-content:space-between}
+  .row,.row.grid4,.row.pair-right,.row.trio-full,.row.trio-center,.row.row-center{flex-wrap:wrap;gap:28px 12px;justify-content:space-between}
   .series .row.grid4+.row.grid4{margin-top:-36px}
-  .row.grid4 .work,.row.pair-right .work,.row.trio-center .work{width:calc(50% - 6px)}
+  .row.grid4 .work,.row.pair-right .work,.row.trio-center .work,.row.row-center .work{width:calc(50% - 6px)!important}
   .row.pair-wide .work,.row.single .work,.row.trio-full .work{width:100%;flex:none}
   .row.single figcaption{gap:16px}
   .work{gap:10px}
