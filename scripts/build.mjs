@@ -110,7 +110,7 @@ async function build() {
       const sold = w.status === 'Sold';
       viewer.push({ slug: w.slug, title: w.title, year: w.year, size: w.size, medium: w.medium, note: w.note || '', price: !sold && w.status === 'Available' ? money(w.price) : '', sold, imgs: w.imgs.map(x => ({ src: x.large, w: x.w, h: x.h })) });
       return `<figure class="work reveal" id="${w.slug}">
-  <button class="pic" data-i="${i}" aria-label="Open ${esc(w.title)}" style="aspect-ratio:${im.w}/${im.h}">${img(im, `${w.title}, ${w.year || ''}`, SIZES[r.layout])}</button>
+  <button class="pic${w.shape === 'round' ? ' round' : ''}" data-i="${i}" aria-label="Open ${esc(w.title)}" style="aspect-ratio:${w.shape === 'round' ? '1/1' : im.w + '/' + im.h}">${img(im, `${w.title}, ${w.year || ''}`, SIZES[r.layout])}</button>
   <figcaption><div class="cap-l"><p class="t">${esc(w.title)}</p>${!sold && w.status === 'Available' && w.price ? `<p class="t">${money(w.price)}</p>` : ''}${sold ? '<span class="dot" title="Sold"></span>' : ''}</div><div class="cap-r"><p>${esc(w.size ? w.size + ' in' : '')}</p><p>${esc(w.medium)}</p>${w.note ? `<p>${esc(w.note)}</p>` : ''}</div></figcaption>
 </figure>`;
     }).join('') + `</div>`).join('') + `</section>`;
@@ -282,7 +282,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .work{display:flex;flex-direction:column;gap:${u(16)}}
 .pic{display:block;width:100%;overflow:hidden;cursor:zoom-in;background:#f3f3f3}
 .pic{position:relative;border-radius:0;transition:border-radius .55s var(--ease)}.pic img{width:100%;height:100%;object-fit:cover;transition:transform .9s var(--ease)}
-.pic:hover{border-radius:${u(18)}}.pic:hover img{transform:scale(1.03)}
+.pic:hover{border-radius:${u(18)}}
+.pic.round,.pic.round:hover{border-radius:50%;background:transparent}.pic:hover img{transform:scale(1.03)}
 @media (hover:hover) and (pointer:fine){.pic{cursor:none}}
 .cursor{position:fixed;left:0;top:0;z-index:40;pointer-events:none;padding:${u(8)} ${u(18)} ${u(7)};border:1px solid #000;border-radius:999px;background:#000;color:#fff;font-size:${u(12)};letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;line-height:1;opacity:0;transform:translate(-50%,-50%) scale(.6);transition:opacity .25s,transform .35s var(--ease)}
 .cursor.on{opacity:1;transform:translate(-50%,-50%) scale(1)}

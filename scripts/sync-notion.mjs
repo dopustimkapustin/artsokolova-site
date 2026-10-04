@@ -96,7 +96,7 @@ async function main() {
     works.push({
       title, slug, series: seriesById[rel(p, 'Series')[0]] || '', order: num(p, 'Order') ?? 99, year: num(p, 'Year'),
       size: text(p, 'Size (in)'), medium: text(p, 'Medium'), price: num(p, 'Price'), status: sel(p, 'Status') || 'Available',
-      ar: box(p, 'AR'), note: text(p, 'Note'), show: box(p, 'Show on site'), images,
+      ar: box(p, 'AR'), note: text(p, 'Note'), show: box(p, 'Show on site'), shape: sel(p, 'Shape').toLowerCase() === 'round' ? 'round' : undefined, images,
     });
   }
 

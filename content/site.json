@@ -298,7 +298,8 @@
       "status": "Available",
       "images": [
         "digital-flora-no-6"
-      ]
+      ],
+      "shape": "round"
     },
     {
       "title": "Digital Flora No. 7",
@@ -311,7 +312,8 @@
       "status": "Available",
       "images": [
         "digital-flora-no-7"
-      ]
+      ],
+      "shape": "round"
     },
     {
       "title": "Digital Flora No. 8",
@@ -324,7 +326,8 @@
       "status": "Available",
       "images": [
         "digital-flora-no-8"
-      ]
+      ],
+      "shape": "round"
     },
     {
       "title": "Fibonacci's Secret Garden No. 1",
