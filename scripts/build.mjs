@@ -300,7 +300,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .hero{position:relative;height:${u(802)}}
 .logo{position:absolute;left:${u(40)};top:${u(109)};width:${u(543)};line-height:0;color:var(--ink)}
 .logo svg{width:100%;height:auto;overflow:visible}
-.intro{position:absolute;left:${u(40)};top:${u(639)};width:${u(427)};font-size:${u(21)};line-height:1.45}
+/* bottom of the intro sits 40px above the bottom of the first screen (or of the hero, whichever is higher) */
+.intro{position:absolute;left:${u(40)};bottom:max(${u(40)}, calc(${u(842)} - 100svh));width:${u(427)};font-size:${u(21)};line-height:1.45}
 .hero-photo{position:absolute;left:calc(50% - ${u(20)});top:${u(60)};right:0;height:${u(742)};overflow:hidden;background:#eee}
 .hero-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 0}
 .touch{position:absolute;left:calc(33.333% + ${u(104)});top:${u(557)};width:${u(187)};height:${u(187)};color:#fff;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);z-index:2}
