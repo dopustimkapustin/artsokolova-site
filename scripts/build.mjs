@@ -155,10 +155,15 @@ ${hero ? `<meta property="og:image" content="${hero.large}">` : ''}
 </section>
 
 <main class="wrap">
-  ${ar ? `<section class="ar" id="ar">
-    <div class="ar-img">${img(ar, 'Paintings from the AR series', '(max-width: 900px) 100vw, 83vw')}</div>
-    <h2 class="h">AR Experience</h2>
-  </section>` : ''}
+  <section class="ar" id="ar" aria-label="AR Experience">
+    <div class="ar-pin">
+      <div class="ar-stage">
+        <div class="ar-3d"><iframe data-src="${esc(T.splineUrl || 'https://my.spline.design/buterfliesdesktopcopy-WeVWnXqP8g8xECApmB7JiAVJ/')}" title="3D artwork" frameborder="0" allow="autoplay; fullscreen"></iframe></div>
+        ${['ladybugs','butterflies','dragonflies','balance'].map((n,i)=>`<div class="ar-dot d${i+1}"><video src="assets/video/ar-${n}.mp4" poster="assets/video/ar-${n}.jpg" muted loop playsinline preload="none" aria-hidden="true"></video></div>`).join('')}
+      </div>
+      <h2 class="h">AR Experience</h2>
+    </div>
+  </section>
   <div class="work-head" id="work"><h2 class="h"><span>Work</span></h2></div>
   <div class="works">${worksHtml}</div>
 
@@ -236,9 +241,18 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .touch:hover::before{transform:scale(1.1)}
 
 /* AR */
-.ar{display:flex;flex-direction:column;align-items:center;gap:${u(32)};padding-top:${u(120)};margin-top:${u(0)}}
-.ar-img{position:relative;width:${u(1191)};height:${u(541)};overflow:hidden}
-.ar-img img{position:absolute;width:114.24%;height:110.17%;max-width:none;left:-9.89%;top:-6.84%}
+.ar{position:relative;height:220vh;margin-top:${u(40)}}
+.ar-pin{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${u(32)};padding-top:${u(60)}}
+.ar-stage{position:relative;width:${u(1191)};height:${u(560)}}
+.ar-3d{position:absolute;left:50%;top:50%;width:${u(560)};height:${u(560)};transform:translate(-50%,-50%) scale(calc(.85 + .15*var(--c,0)));opacity:var(--c,0)}
+.ar-3d iframe{width:100%;height:100%;border:0;display:block}
+.ar-dot{position:absolute;width:${u(210)};height:${u(210)};border-radius:50%;overflow:hidden;background:#f2f2f2;opacity:var(--t,0);transform:translate(calc((1 - var(--t,0)) * var(--dx)),calc((1 - var(--t,0)) * var(--dy))) scale(calc(.4 + .6*var(--t,0)))}
+.ar-dot video{width:100%;height:100%;object-fit:cover;display:block}
+.ar-dot.d1{left:${u(20)};top:${u(10)};--dx:${u(260)};--dy:${u(120)}}
+.ar-dot.d2{left:${u(110)};top:${u(330)};--dx:${u(200)};--dy:${u(-60)}}
+.ar-dot.d3{right:${u(20)};top:${u(10)};--dx:${u(-260)};--dy:${u(120)}}
+.ar-dot.d4{right:${u(110)};top:${u(330)};--dx:${u(-200)};--dy:${u(-60)}}
+@media (prefers-reduced-motion:reduce){.ar{height:auto}.ar-pin{position:relative;height:auto;padding:${u(120)} 0 0}.ar-3d,.ar-dot{--t:1!important;--c:1!important}}
 
 /* WORK label */
 .work-head{position:relative;height:${u(107)};display:flex;align-items:flex-end;justify-content:center;margin-top:${u(100)};pointer-events:none}
@@ -335,8 +349,13 @@ footer{margin-top:${u(120)};padding-bottom:${u(20)};display:flex;flex-direction:
   .hero-photo{top:220px;left:auto;right:0;width:75%;height:340px}
   .touch{left:56%;top:462px;width:104px;height:104px}
   .touch span{font-size:16px}
-  .ar{padding-top:72px;gap:16px}
-  .ar-img{width:100%;height:auto;aspect-ratio:1191/541}
+  .ar{height:180vh;margin-top:24px}
+  .ar-pin{gap:20px;padding-top:40px}
+  .ar-stage{width:100%;height:min(120vw,560px)}
+  .ar-3d{width:78vw;height:78vw}
+  .ar-dot{width:26vw;height:26vw}
+  .ar-dot.d1{left:0;top:0;--dx:20vw;--dy:20vw}.ar-dot.d3{right:0;top:0;--dx:-20vw;--dy:20vw}
+  .ar-dot.d2{left:0;top:auto;bottom:0;--dx:20vw;--dy:-20vw}.ar-dot.d4{right:0;top:auto;bottom:0;--dx:-20vw;--dy:-20vw}
   .work-head{height:64px;margin-top:56px}
   .works,.series{gap:64px}
   .works{margin-top:40px}
@@ -370,6 +389,16 @@ const JS = String.raw`
 // reveal on scroll
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{rootMargin:'0px 0px -8% 0px'});
 document.querySelectorAll('.reveal').forEach((el,i)=>{const row=el.parentElement;const k=row?[...row.children].indexOf(el):0;el.style.transitionDelay=(k*0.08)+'s';io.observe(el)});
+// AR: scroll-driven appearance of the 3D piece and the video circles
+const ar=document.querySelector('.ar');
+if(ar){const c3=ar.querySelector('.ar-3d'),ifr=ar.querySelector('iframe'),dots=[...ar.querySelectorAll('.ar-dot')],vids=dots.map(d=>d.querySelector('video'));
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){if(!ifr.src)ifr.src=ifr.dataset.src;vids.forEach(v=>v.play().catch(()=>{}))}else vids.forEach(v=>v.pause())}),{rootMargin:'300px 0px'}).observe(ar);
+  const cl=x=>Math.max(0,Math.min(1,x)),ease=x=>1-Math.pow(1-x,3);
+  let tick=false;function upd(){tick=false;const r=ar.getBoundingClientRect(),vh=innerHeight;const p=reduce?1:cl((vh-r.top)/(r.height));
+    c3.style.setProperty('--c',ease(cl((p-.12)/.25)));
+    dots.forEach((d,i)=>d.style.setProperty('--t',ease(cl((p-.3-i*.07)/.22))))}
+  addEventListener('scroll',()=>{if(!tick){tick=true;requestAnimationFrame(upd)}},{passive:true});addEventListener('resize',upd);upd()}
 // slideshow
 const W=window.WORKS,lb=document.querySelector('.lb'),im=lb.querySelector('.lb-stage img'),t=lb.querySelector('.lb-cap .t'),pr=lb.querySelector('.lb-cap .pr'),m=lb.querySelector('.lb-cap .m'),inq=lb.querySelector('.inq');let i=0,j=0;
 function show(){const w=W[i],x=w.imgs[j];im.src=x.src;im.width=x.w;im.height=x.h;im.alt=w.title;t.textContent=w.title+(w.year?', '+w.year:'');pr.textContent=w.sold?'Sold':w.price;m.textContent=[w.size&&w.size+' in',w.medium,w.note].filter(Boolean).join(' · ');inq.style.display=w.sold?'none':'';inq.href='mailto:'+window.EMAIL+'?subject='+encodeURIComponent('Inquiry: '+w.title);history.replaceState(null,'','#'+w.slug);const n=W[(i+1)%W.length];if(n){new Image().src=n.imgs[0].src}}
