@@ -27,10 +27,11 @@ async function processImage(name) {
   const meta = await sharp(src).metadata();
   const rot = (meta.orientation || 1) >= 5;
   const w0 = rot ? meta.height : meta.width, h0 = rot ? meta.width : meta.height;
+  const hash = (await import('node:crypto')).createHash('sha1').update(await fs.readFile(src)).digest('hex').slice(0, 8);
   const widths = [...new Set(WIDTHS.filter(w => w < w0).concat(w0 <= 2400 ? [w0] : [2400]))];
   const out = [];
   for (const w of widths) {
-    const fn = `img/${name}-${w}.webp`;
+    const fn = `img/${name}-${hash}-${w}.webp`;
     const dest = path.join(DIST, fn);
     try { await fs.access(dest); } catch {
       await sharp(src).rotate().resize({ width: w }).toColourspace('srgb').webp({ quality: 84 }).toFile(dest);
