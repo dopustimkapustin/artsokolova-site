@@ -106,11 +106,21 @@ async function build() {
     for (const w of works) { w.slug ||= slugify(w.title); w.imgs = (await Promise.all(w.images.map(processImage))).filter(Boolean); }
     const rows = groupWorks(works.filter(w => w.imgs.length));
     if (!rows.length) continue;
+    // A lone work after a row of smaller ones matches their height instead of
+    // being blown up to full single-column width.
+    const COLW = { grid4: 325, 'pair-wide': 427, 'pair-right': 310, single: 441, 'trio-center': 288 };
+    rows.forEach((r, k) => {
+      const prev = rows[k - 1];
+      if (r.layout !== 'single' || !prev || !COLW[prev.layout]) return;
+      const pim = prev.items[0].imgs[0], im = r.items[0].imgs[0];
+      const prevH = COLW[prev.layout] * pim.h / pim.w;
+      r.width = Math.min(441, prevH * im.w / im.h);
+    });
     worksHtml += `<section class="series" id="${s.id}" aria-label="${esc(s.name)}">` + rows.map(r => `<div class="row ${r.layout}">` + r.items.map(w => {
       const i = viewer.length, im = w.imgs[0];
       const sold = w.status === 'Sold';
       viewer.push({ slug: w.slug, title: w.title, year: w.year, size: w.size, medium: w.medium, note: w.note || '', price: !sold && w.status === 'Available' ? money(w.price) : '', sold, imgs: w.imgs.map(x => ({ src: x.large, w: x.w, h: x.h })) });
-      const flex = r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
+      const flex = r.width ? ` style="width:${u(r.width)}"` : r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
       return `<figure class="work reveal" id="${w.slug}"${flex}>
   <button class="pic${w.shape === 'round' ? ' round' : ''}" data-i="${i}" aria-label="Open ${esc(w.title)}" style="aspect-ratio:${w.shape === 'round' ? '1/1' : im.w + '/' + im.h}">${img(im, `${w.title}, ${w.year || ''}`, SIZES[r.layout])}</button>
   <figcaption><div class="cap-l"><p class="t">${esc(w.title)}</p>${!sold && w.status === 'Available' && w.price ? `<p class="t">${money(w.price)}</p>` : ''}${sold ? '<p class="sold"><span class="dot"></span>Sold</p>' : ''}</div><div class="cap-r"><p>${esc(w.size ? w.size + ' in' : '')}</p><p>${esc(w.medium)}</p>${w.note ? `<p>${esc(w.note)}</p>` : ''}</div></figcaption>
