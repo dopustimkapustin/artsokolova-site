@@ -112,6 +112,7 @@ async function build() {
   const socialSvg = (await fs.readFile(path.join(ROOT, 'assets/svg/instagram.svg'), 'utf8')).replace(/preserveAspectRatio="none" overflow="visible" style="display: block;" /, 'aria-hidden="true" ');
 
   const series = data.series.filter(s => s.show !== false).sort((a, b) => a.order - b.order);
+  let trioCount = 0;
   for (const w of data.works) if (w.images?.length) { w.slug ||= slugify(w.title); w.imgs = (await Promise.all(w.images.map(processImage))).filter(Boolean); }
   const viewer = []; // flat list for the slideshow
   let worksHtml = '';
@@ -129,7 +130,7 @@ async function build() {
       if (r.layout !== 'single' || !prev || !COLW[prev.layout]) return;
       const pim = prev.items[0].imgs[0], im = r.items[0].imgs[0];
       const prevH = COLW[prev.layout] * pim.h / pim.w;
-      r.width = Math.min(441, prevH * im.w / im.h);
+      // (superseded by the column grid)
     });
     // Small works (up to 16in) after bigger ones in the same series are shown
     // at their real size relative to those (e.g. 14in next to 30in).
@@ -140,16 +141,30 @@ async function build() {
       const prevH = COLW[prev.layout] * pim.h / pim.w;
       const ratio = Math.max(...dims(r.items[0].size)) / Math.max(...dims(prev.items[0].size));
       const H = prevH * ratio;
-      r.itemWidth = H * (r.items[0].shape === 'round' ? 1 : im.w / im.h);
+      // (superseded by the column grid)
     });
     // Series marked "large" show every work at the width of Balance 01.
-    if (s.large) rows.forEach(r => { if (r.layout !== 'trio-full') { r.width = 0; r.itemWidth = STAGGER_W; } });
-    worksHtml += `<section class="series" id="${s.id}" aria-label="${esc(s.name)}">` + rows.map(r => `<div class="row ${r.layout}${r.side ? ' ' + r.side : ''}${(r.itemWidth && r.itemWidth < 250) || (r.width && r.width < 250) ? ' compact' : ''}">` + r.items.map(w => {
+    // 12-column grid (Figma: 12 cols, margin 40, gutter 20). Each row places its
+    // works on columns; 'trio-full' keeps one shared height instead.
+    rows.forEach(r => {
+      const n = r.items.length, L = r.layout;
+      let starts, span;
+      if (s.large && L !== 'trio-full') { span = 4; starts = n === 3 ? [1, 5, 9] : n === 2 ? [5, 9] : n === 1 ? [5] : r.items.map((_, i) => 1 + (i % 3) * 4); }
+      else if (L === 'grid4') { span = 3; starts = r.items.map((_, i) => 1 + i * 3); }
+      else if (L === 'pair-wide') { span = 4; starts = [3, 7]; }
+      else if (L === 'pair-right') { span = 3; starts = [7, 10]; }
+      else if (L === 'single') { span = 4; starts = [5]; }
+      else if (L === 'trio-center') { span = 3; const left = (trioCount++ % 2) === 0; starts = left ? [1, 4, 7] : [4, 7, 10]; }
+      else if (L === 'row-center') { span = 3; const off = 1 + Math.floor((12 - 3 * n) / 2); starts = r.items.map((_, i) => off + i * 3); }
+      else if (L === 'stagger') { span = 4; starts = r.side === 'right' ? [5, 9] : [1, 5]; }
+      if (span) r.place = r.items.map((_, i) => `grid-column:${starts[i]} / span ${span}`);
+    });
+    worksHtml += `<section class="series" id="${s.id}" aria-label="${esc(s.name)}">` + rows.map(r => `<div class="row ${r.layout}${r.side ? ' ' + r.side : ''}">` + r.items.map(w => {
       const i = viewer.length, im = w.imgs[0];
       const sold = w.status === 'Sold';
       viewer.push({ slug: w.slug, title: w.title, year: w.year, size: w.size, medium: w.medium, note: w.note || '', price: !sold && w.status === 'Available' ? money(w.price) : '', sold, imgs: w.imgs.map(x => ({ src: x.large, w: x.w, h: x.h })) });
       const rc = r.layout === 'row-center' ? (() => { const f = r.items[0].imgs[0]; const H = 288 * f.h / f.w; return ` style="width:${u(H * im.w / im.h)}"`; })() : '';
-      const flex = r.layout === 'stagger' ? ` style="width:${u(STAGGER_W)}"` : rc ? rc : r.width ? ` style="width:${u(r.width)}"` : r.itemWidth ? ` style="width:${u(r.itemWidth)}"` : r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
+      const flex = r.place ? ` style="${r.place[r.items.indexOf(w)]}"` : r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
       return `<figure class="work reveal" id="${w.slug}"${flex}>
   <button class="pic${w.shape === 'round' ? ' round' : ''}" data-i="${i}" aria-label="Open ${esc(w.title)}" style="aspect-ratio:${w.shape === 'round' ? '1/1' : im.w + '/' + im.h}">${img(im, `${w.title}, ${w.year || ''}`, SIZES[r.layout])}</button>
   <figcaption><div class="cap-l"><p class="t">${esc(w.title)}</p>${!sold && w.status === 'Available' && w.price ? `<p class="t">${money(w.price)}</p>` : ''}${sold ? '<p class="sold"><span class="dot"></span>Sold</p>' : ''}</div><div class="cap-r"><p>${esc(w.size ? w.size + ' in' : '')}</p><p>${esc(w.medium)}</p>${w.note ? `<p>${esc(w.note)}</p>` : ''}</div></figcaption>
@@ -305,24 +320,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* works */
 .works{display:flex;flex-direction:column;gap:${u(160)};margin-top:${u(100)}}
 .series{display:flex;flex-direction:column;gap:${u(160)}}
-.row{display:flex;align-items:flex-start;gap:${u(20)}}
-.row.grid4{gap:${u(20)};flex-wrap:wrap;row-gap:${u(32)}}
-.row.grid4 .work{width:${u(325)}}
+.row{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:${u(20)};align-items:start}
 .series .row.grid4+.row.grid4{margin-top:${u(-128)}}
-.row.pair-wide{justify-content:space-between}
-.row.pair-wide .work{width:${u(427)}}
-.row.single{justify-content:center}
-.row.single .work{width:${u(441)}}
-.row.single figcaption{gap:${u(88)}}
-.row.pair-right{justify-content:flex-end;gap:${u(32)}}
-.row.pair-right .work{width:${u(310)}}
-.row.trio-full{gap:${u(32)}}
+.row.trio-full{display:flex;gap:${u(20)}}
 .row.trio-full .work{flex:1 1 0}
-.row.trio-center{justify-content:center;gap:${u(32)}}
-.row.trio-center .work{width:${u(288)}}
-.row.row-center{justify-content:center;gap:${u(32)}}
-.row.stagger{gap:${u(32)}}.row.stagger.right{justify-content:flex-end}
-.row.trio-center.wide,.row.pair-right.wide{gap:${u(32)}}
+.row.single figcaption{gap:${u(40)}}
 .row.compact figcaption{flex-direction:column;gap:${u(6)}}.row.compact .cap-r{text-align:left;max-width:none}
 .work{display:flex;flex-direction:column;gap:${u(16)}}
 .pic{display:block;width:100%;overflow:hidden;cursor:zoom-in;background:#f3f3f3}
@@ -412,7 +414,8 @@ footer{margin-top:${u(120)};padding-bottom:${u(20)};display:flex;flex-direction:
   .work-head{height:64px;margin-top:56px}
   .works,.series{gap:64px}
   .works{margin-top:40px}
-  .row,.row.grid4,.row.pair-right,.row.trio-full,.row.trio-center,.row.row-center,.row.stagger{flex-wrap:wrap;gap:28px 12px;justify-content:space-between}
+  .row,.row.grid4,.row.pair-right,.row.trio-full,.row.trio-center,.row.row-center,.row.stagger{display:flex;flex-wrap:wrap;gap:28px 12px;justify-content:space-between}
+  .row .work{grid-column:auto!important}
   .series .row.grid4+.row.grid4{margin-top:-36px}
   .row.grid4 .work,.row.pair-right .work,.row.trio-center .work,.row.row-center .work{width:calc(50% - 6px)!important}
   .row.pair-wide .work,.row.single .work,.row.trio-full .work{width:100%;flex:none}
