@@ -282,7 +282,7 @@ img{display:block;max-width:100%;height:auto}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .wrap{width:var(--wrap);margin:0 auto}
 .line{height:1px;background:var(--ink)}
-.top .line{opacity:.15}
+.top .line,footer .line{opacity:.15}
 .mail{font-size:${u(16)};text-decoration:underline;text-underline-offset:.15em;text-decoration-thickness:1px}
 .mail:hover{color:var(--red)}
 .h{font-family:var(--serif);font-style:italic;font-weight:300;font-size:${u(36)};line-height:1.35;text-transform:uppercase;text-align:center}
@@ -327,7 +327,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
 /* WORK label */
 .work-wrap{position:relative}
-.work-head{position:sticky;top:calc(50vh - ${u(24)});z-index:0;display:flex;justify-content:center;margin-top:${u(150)};pointer-events:none}
+.work-head{position:relative;display:flex;justify-content:center;margin-top:${u(150)};pointer-events:none}
 
 
 /* works */
@@ -425,7 +425,7 @@ footer{margin-top:${u(120)};padding-bottom:${u(20)};display:flex;flex-direction:
   .ar-dot{width:26vw;height:26vw}
   .ar-dot.d1{left:0;top:0;--dx:20vw;--dy:20vw}.ar-dot.d3{right:0;top:0;--dx:-20vw;--dy:20vw}
   .ar-dot.d2{left:0;top:auto;bottom:0;--dx:20vw;--dy:-20vw}.ar-dot.d4{right:0;top:auto;bottom:0;--dx:-20vw;--dy:-20vw}
-  .work-head{top:calc(50vh - 20px);margin-top:72px}
+  .work-head{margin-top:72px}
   .works{gap:64px}.series{gap:35px}
   .works{margin-top:40px}
   .row,.row.grid4,.row.pair-right,.row.trio-full,.row.trio-center,.row.row-center,.row.stagger{display:flex;flex-wrap:wrap;gap:28px 12px;justify-content:space-between}
