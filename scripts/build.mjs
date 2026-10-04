@@ -172,6 +172,9 @@ async function build() {
     }).join('') + `</div>`).join('') + `</section>`;
   }
 
+  const LABELS = { 'twelve-months': '12 Months', 'digital-flora': 'Digital Flora', 'fibonaccis-secret-garden': 'Fibonacci', 'the-babylonian-gardens': 'Babylonian', 'digital-flora-ar-series': 'AR Series', balance: 'Balance', memories: 'Memories' };
+  const shown = series.filter(s => worksHtml.includes(`id="${s.id}"`));
+  const subnav = `<nav class="subnav wrap" aria-label="Series">${shown.map(s => `<a href="#${s.id}" data-s="${s.id}">${esc(s.menuLabel || LABELS[s.id] || s.name)}</a>`).join('')}</nav>`;
   const hero = await processImage(T.heroImage);
   const about = await processImage(T.aboutImage);
   const ar = await processImage(T.arImage);
@@ -201,6 +204,7 @@ ${hero ? `<meta property="og:image" content="${hero.large}">` : ''}
     <a class="mail" href="${mail}">${esc(T.email)}</a>
   </div>
   <div class="wrap line"></div>
+  ${subnav}
 </header>
 
 <section class="hero">
@@ -269,7 +273,7 @@ const CSS = String.raw`
 @font-face{font-family:Writer;src:url(assets/fonts/PPWriter-BookItalic.woff2) format('woff2');font-style:italic;font-weight:300;font-display:swap}
 :root{--wrap:${u(1360)};--ink:#000;--ink2:#333;--red:#ff0749;--dot:#ff0000;--sans:Telegraf,Helvetica,Arial,sans-serif;--serif:Writer,'Times New Roman',serif;--ease:cubic-bezier(.2,.7,.1,1)}
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;scroll-padding-top:${u(80)}}
+html{scroll-behavior:smooth;scroll-padding-top:${u(130)}}
 body{font-family:var(--sans);color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 img{display:block;max-width:100%;height:auto}
@@ -284,9 +288,14 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* header */
 .top{position:fixed;inset:0 0 auto;z-index:30;background:#fff;padding-top:${u(20)}}
 .top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:${u(20)}}
-.top nav{display:flex;gap:${u(44)};font-size:${u(15)};line-height:1.35;text-transform:uppercase}
-.top nav a,.top .mail{transition:opacity .18s}.top nav a:hover,.top .mail:hover{opacity:.45;color:inherit}
+.top-row nav{display:flex;gap:${u(44)};font-size:${u(15)};line-height:1.35;text-transform:uppercase}
+.top-row nav a,.top .mail{transition:opacity .18s}.top-row nav a:hover,.top .mail:hover{opacity:.45;color:inherit}
 
+.subnav{position:absolute;left:0;right:0;top:100%;display:flex;gap:${u(8)};padding-top:${u(10)};opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .35s,transform .45s var(--ease)}
+.top.sub-on .subnav{opacity:1;transform:none;pointer-events:auto}
+.subnav a{display:inline-flex;align-items:center;height:${u(32)};padding:0 ${u(16)};border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);font-size:${u(13)};text-transform:uppercase;line-height:1;white-space:nowrap;transition:background .25s,color .25s}
+.subnav a:hover{border-color:#000}
+.subnav a.on{background:#000;color:#fff;border-color:#000}
 /* hero */
 .hero{position:relative;height:${u(802)}}
 .logo{position:absolute;left:${u(40)};top:${u(109)};width:${u(543)};line-height:0;color:var(--ink)}
@@ -395,7 +404,9 @@ footer{margin-top:${u(120)};padding-bottom:${u(20)};display:flex;flex-direction:
   :root{--wrap:calc(100vw - 32px)}
   .mail{font-size:14px}
   .h{font-size:28px}
-  .top{padding-top:14px}.top-row{margin-bottom:14px}.top nav{gap:22px;font-size:13px}
+  .subnav{overflow-x:auto;scrollbar-width:none;padding:8px 16px 0;width:100%;gap:6px}.subnav::-webkit-scrollbar{display:none}
+  .subnav a{height:30px;padding:0 12px;font-size:11px}
+  .top{padding-top:14px}.top-row{margin-bottom:14px}.top-row nav{gap:22px;font-size:13px}
   .top .mail{font-size:13px}
   .hero{height:auto;min-height:700px;padding:86px 16px 32px}
   .logo{position:relative;left:0;top:0;width:88%;z-index:3}
@@ -462,6 +473,10 @@ if(cur&&matchMedia('(hover: hover) and (pointer: fine)').matches){let x=0,y=0,cx
   addEventListener('mousemove',e=>{x=e.clientX;y=e.clientY;if(!raf)raf=requestAnimationFrame(move)},{passive:true});
   function move(){cx+=(x-cx)*.25;cy+=(y-cy)*.25;cur.style.left=cx+'px';cur.style.top=cy+'px';raf=(Math.abs(x-cx)+Math.abs(y-cy)>.5)?requestAnimationFrame(move):0}
   document.querySelectorAll('.pic').forEach(p=>{p.addEventListener('mouseenter',e=>{cx=x=e.clientX;cy=y=e.clientY;move();cur.classList.add('on')});p.addEventListener('mouseleave',()=>cur.classList.remove('on'))})}
+// series sub menu: visible inside WORK, highlights the current series
+const top=document.querySelector('.top'),works=document.querySelector('.works'),links=[...document.querySelectorAll('.subnav a')],secs=links.map(a=>document.getElementById(a.dataset.s));
+if(works&&links.length){let t2=false;function sub(){t2=false;const vh=innerHeight,r=works.getBoundingClientRect();const on=r.top<vh*0.5&&r.bottom>vh*0.3;top.classList.toggle('sub-on',on);let cur=0;secs.forEach((s,i)=>{if(s.getBoundingClientRect().top<vh*0.45)cur=i});links.forEach((a,i)=>a.classList.toggle('on',on&&i===cur));if(on){const a=links[cur];const nav=a.parentElement;if(nav.scrollWidth>nav.clientWidth){const l=a.offsetLeft-16;if(l<nav.scrollLeft||a.offsetLeft+a.offsetWidth>nav.scrollLeft+nav.clientWidth)nav.scrollTo({left:l,behavior:'smooth'})}}}
+  addEventListener('scroll',()=>{if(!t2){t2=true;requestAnimationFrame(sub)}},{passive:true});addEventListener('resize',sub);sub()}
 // slideshow
 const W=window.WORKS,lb=document.querySelector('.lb'),im=lb.querySelector('.lb-stage img'),t=lb.querySelector('.lb-cap .t'),pr=lb.querySelector('.lb-cap .pr'),m=lb.querySelector('.lb-cap .m'),inq=lb.querySelector('.inq');let i=0,j=0;
 function show(){const w=W[i],x=w.imgs[j];im.src=x.src;im.width=x.w;im.height=x.h;im.alt=w.title;t.textContent=w.title+(w.year?', '+w.year:'');pr.textContent=w.sold?'Sold':w.price;m.textContent=[w.size&&w.size+' in',w.medium,w.note].filter(Boolean).join(' · ');inq.style.display=w.sold?'none':'';inq.href='mailto:'+window.EMAIL+'?subject='+encodeURIComponent('Inquiry: '+w.title);history.replaceState(null,'','#'+w.slug);const n=W[(i+1)%W.length];if(n){new Image().src=n.imgs[0].src}}

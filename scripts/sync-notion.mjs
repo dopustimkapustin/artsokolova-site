@@ -79,7 +79,7 @@ async function main() {
 
   const seriesById = {};
   const series = seriesPages.map(p => {
-    const s = { id: slugify(text(p, 'Name')), name: text(p, 'Name'), order: num(p, 'Order') ?? 99, ar: box(p, 'AR'), description: text(p, 'Description'), show: box(p, 'Show on site'), large: box(p, 'Large works') || undefined };
+    const s = { id: slugify(text(p, 'Name')), name: text(p, 'Name'), order: num(p, 'Order') ?? 99, ar: box(p, 'AR'), description: text(p, 'Description'), show: box(p, 'Show on site'), large: box(p, 'Large works') || undefined, menuLabel: text(p, 'Menu label') || undefined };
     seriesById[p.id.replace(/-/g, '')] = s.id;
     return s;
   }).filter(s => s.name).sort((a, b) => a.order - b.order);
