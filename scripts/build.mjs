@@ -110,7 +110,8 @@ async function build() {
       const i = viewer.length, im = w.imgs[0];
       const sold = w.status === 'Sold';
       viewer.push({ slug: w.slug, title: w.title, year: w.year, size: w.size, medium: w.medium, note: w.note || '', price: !sold && w.status === 'Available' ? money(w.price) : '', sold, imgs: w.imgs.map(x => ({ src: x.large, w: x.w, h: x.h })) });
-      return `<figure class="work reveal" id="${w.slug}">
+      const flex = r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
+      return `<figure class="work reveal" id="${w.slug}"${flex}>
   <button class="pic${w.shape === 'round' ? ' round' : ''}" data-i="${i}" aria-label="Open ${esc(w.title)}" style="aspect-ratio:${w.shape === 'round' ? '1/1' : im.w + '/' + im.h}">${img(im, `${w.title}, ${w.year || ''}`, SIZES[r.layout])}</button>
   <figcaption><div class="cap-l"><p class="t">${esc(w.title)}</p>${!sold && w.status === 'Available' && w.price ? `<p class="t">${money(w.price)}</p>` : ''}${sold ? '<p class="sold"><span class="dot"></span>Sold</p>' : ''}</div><div class="cap-r"><p>${esc(w.size ? w.size + ' in' : '')}</p><p>${esc(w.medium)}</p>${w.note ? `<p>${esc(w.note)}</p>` : ''}</div></figcaption>
 </figure>`;
