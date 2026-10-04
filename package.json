@@ -1,0 +1,20 @@
+{
+  "name": "artsokolova-site",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "sync": "node scripts/sync-notion.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "sharp": "^0.35.5"
+  },
+  "type": "module",
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}
