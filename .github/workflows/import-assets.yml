@@ -1,0 +1,24 @@
+name: Import images (one-off)
+on:
+  push:
+    paths: ['content/import/manifest.json']
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download
+        run: |
+          mkdir -p content/import/files
+          node -e '
+            const m=require("./content/import/manifest.json");const fs=require("fs");
+            (async()=>{for(const [n,u] of Object.entries(m)){const r=await fetch(u);if(!r.ok){console.log("FAIL",n,r.status);continue}
+              const t=r.headers.get("content-type")||"";const ext=t.includes("svg")?"svg":t.includes("jpeg")?"jpg":t.includes("webp")?"webp":"png";
+              fs.writeFileSync(`content/import/files/${n}.${ext}`,Buffer.from(await r.arrayBuffer()));console.log("ok",n,t)}})()'
+      - name: Commit
+        run: |
+          git config user.name "site-bot"; git config user.email "site-bot@users.noreply.github.com"
+          git add content/import/files && git commit -m "Import images from current site and Figma" && git push
