@@ -544,7 +544,8 @@
       "status": "Available",
       "images": [
         "memories-no-1"
-      ]
+      ],
+      "layout": "trio-full"
     },
     {
       "title": "Memories No. 2",
