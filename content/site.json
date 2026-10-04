@@ -48,7 +48,8 @@
       "name": "Digital Flora — AR Series",
       "order": 5,
       "ar": true,
-      "description": "Butterflies, ladybugs, dragonflies, and bumblebees, painted in oil in the tradition of the Old Dutch masters, come to life in Augmented Reality and continue to exist in digital space."
+      "description": "Butterflies, ladybugs, dragonflies, and bumblebees, painted in oil in the tradition of the Old Dutch masters, come to life in Augmented Reality and continue to exist in digital space.",
+      "hideInMenu": true
     },
     {
       "id": "balance",

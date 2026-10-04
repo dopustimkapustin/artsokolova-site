@@ -173,7 +173,7 @@ async function build() {
   }
 
   const LABELS = { 'twelve-months': '12 Months', 'digital-flora': 'Digital Flora', 'fibonaccis-secret-garden': 'Fibonacci', 'the-babylonian-gardens': 'Babylonian', 'digital-flora-ar-series': 'AR Series', balance: 'Balance', memories: 'Memories' };
-  const shown = series.filter(s => worksHtml.includes(`id="${s.id}"`));
+  const shown = series.filter(s => !s.hideInMenu && worksHtml.includes(`id="${s.id}"`));
   const subnav = `<nav class="subnav wrap" aria-label="Series">${shown.map(s => `<a href="#${s.id}" data-s="${s.id}">${esc(s.menuLabel || LABELS[s.id] || s.name)}</a>`).join('')}</nav>`;
   const hero = await processImage(T.heroImage);
   const about = await processImage(T.aboutImage);
@@ -291,9 +291,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .top-row nav{display:flex;gap:${u(44)};font-size:${u(15)};line-height:1.35;text-transform:uppercase}
 .top-row nav a,.top .mail{transition:opacity .18s}.top-row nav a:hover,.top .mail:hover{opacity:.45;color:inherit}
 
-.subnav{position:absolute;left:0;right:0;top:100%;display:flex;gap:${u(8)};padding-top:${u(10)};opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .35s,transform .45s var(--ease)}
+.subnav{position:absolute;left:0;right:0;top:100%;display:flex;gap:${u(5.6)};padding-top:${u(10)};opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .35s,transform .45s var(--ease)}
 .top.sub-on .subnav{opacity:1;transform:none;pointer-events:auto}
-.subnav a{display:inline-flex;align-items:center;height:${u(32)};padding:0 ${u(16)};border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);font-size:${u(13)};text-transform:uppercase;line-height:1;white-space:nowrap;transition:background .25s,color .25s}
+.subnav a{display:inline-flex;align-items:center;height:${u(22.4)};padding:0 ${u(11.2)};border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);font-size:${u(9.1)};letter-spacing:.02em;text-transform:uppercase;line-height:1;white-space:nowrap;transition:background .25s,color .25s}
 .subnav a:hover{border-color:#000}
 .subnav a.on{background:#000;color:#fff;border-color:#000}
 /* hero */
@@ -404,8 +404,8 @@ footer{margin-top:${u(120)};padding-bottom:${u(20)};display:flex;flex-direction:
   :root{--wrap:calc(100vw - 32px)}
   .mail{font-size:14px}
   .h{font-size:28px}
-  .subnav{overflow-x:auto;scrollbar-width:none;padding:8px 16px 0;width:100%;gap:6px}.subnav::-webkit-scrollbar{display:none}
-  .subnav a{height:30px;padding:0 12px;font-size:11px}
+  .subnav{overflow-x:auto;scrollbar-width:none;padding:8px 16px 0;width:100%;gap:5px}.subnav::-webkit-scrollbar{display:none}
+  .subnav a{height:24px;padding:0 10px;font-size:10px}
   .top{padding-top:14px}.top-row{margin-bottom:14px}.top-row nav{gap:22px;font-size:13px}
   .top .mail{font-size:13px}
   .hero{height:auto;min-height:700px;padding:86px 16px 32px}
