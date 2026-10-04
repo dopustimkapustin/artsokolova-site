@@ -159,7 +159,7 @@ ${hero ? `<meta property="og:image" content="${hero.large}">` : ''}
   <section class="ar" id="ar" aria-label="AR Experience">
     <div class="ar-pin">
       <div class="ar-stage">
-        <div class="ar-3d"><iframe data-src="${esc(T.splineUrl || 'https://my.spline.design/buterfliesdesktopcopy-WeVWnXqP8g8xECApmB7JiAVJ/')}" title="3D artwork" frameborder="0" allow="autoplay; fullscreen"></iframe></div>
+        <div class="ar-3d"><iframe data-src="${esc(T.splineUrl || 'https://my.spline.design/buterfliesdesktopcopy-WeVWnXqP8g8xECApmB7JiAVJ/')}" data-src-mobile="${esc(T.splineUrlMobile || 'https://my.spline.design/buterfliesmobile-vQu7VkJi1QRvhTH2sEvEQbhD/')}" title="3D artwork" frameborder="0" allow="autoplay; fullscreen"></iframe></div>
         ${['ladybugs','butterflies','dragonflies','balance'].map((n,i)=>`<div class="ar-dot d${i+1}"><video src="assets/video/ar-${n}.mp4" poster="assets/video/ar-${n}.jpg" muted loop playsinline preload="none" aria-hidden="true"></video></div>`).join('')}
       </div>
       <h2 class="h">AR Experience</h2>
@@ -402,7 +402,7 @@ document.querySelectorAll('.reveal').forEach((el,i)=>{const row=el.parentElement
 const ar=document.querySelector('.ar');
 if(ar){const c3=ar.querySelector('.ar-3d'),ifr=ar.querySelector('iframe'),dots=[...ar.querySelectorAll('.ar-dot')],vids=dots.map(d=>d.querySelector('video'));
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){if(!ifr.src)ifr.src=ifr.dataset.src;vids.forEach(v=>v.play().catch(()=>{}))}else vids.forEach(v=>v.pause())}),{rootMargin:'300px 0px'}).observe(ar);
+  new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){if(!ifr.src)ifr.src=matchMedia('(max-width: 900px)').matches?ifr.dataset.srcMobile:ifr.dataset.src;vids.forEach(v=>v.play().catch(()=>{}))}else vids.forEach(v=>v.pause())}),{rootMargin:'300px 0px'}).observe(ar);
   const cl=x=>Math.max(0,Math.min(1,x)),ease=x=>1-Math.pow(1-x,3);
   let tick=false;function upd(){tick=false;const r=ar.getBoundingClientRect(),vh=innerHeight;const p=reduce?1:cl((vh-r.top)/(r.height));
     c3.style.setProperty('--c',ease(cl((p-.12)/.25)));
