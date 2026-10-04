@@ -212,6 +212,7 @@ img{display:block;max-width:100%;height:auto}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .wrap{width:var(--wrap);margin:0 auto}
 .line{height:1px;background:var(--ink)}
+.top .line{opacity:.15}
 .mail{font-size:${u(16)};text-decoration:underline;text-underline-offset:.15em;text-decoration-thickness:1px}
 .mail:hover{color:var(--red)}
 .h{font-family:var(--serif);font-style:italic;font-weight:300;font-size:${u(36)};line-height:1.35;text-transform:uppercase;text-align:center}
