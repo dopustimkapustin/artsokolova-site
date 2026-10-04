@@ -230,9 +230,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .intro{position:absolute;left:${u(40)};top:${u(639)};width:${u(427)};font-size:${u(21)};line-height:1.45}
 .hero-photo{position:absolute;left:calc(50% - ${u(20)});top:${u(60)};right:0;height:${u(742)};overflow:hidden;background:#eee}
 .hero-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 0}
-.touch{position:absolute;left:calc(33.333% + ${u(104)});top:${u(557)};width:${u(187)};height:${u(187)};border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);z-index:2;transition:transform .5s var(--ease)}
-.touch span{font-family:var(--serif);font-style:italic;font-size:${u(30.2)};line-height:1.12;text-transform:uppercase;text-align:center}
-.touch:hover{transform:rotate(2deg) scale(1.06)}
+.touch{position:absolute;left:calc(33.333% + ${u(104)});top:${u(557)};width:${u(187)};height:${u(187)};color:#fff;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);z-index:2}
+.touch::before{content:'';position:absolute;inset:0;border-radius:50%;background:var(--red);transition:transform .45s var(--ease)}
+.touch span{position:relative;font-family:var(--serif);font-style:italic;font-size:${u(30.2)};line-height:1.12;text-transform:uppercase;text-align:center}
+.touch:hover::before{transform:scale(1.1)}
 
 /* AR */
 .ar{display:flex;flex-direction:column;align-items:center;gap:${u(32)};padding-top:${u(120)};margin-top:${u(0)}}
