@@ -142,6 +142,8 @@ async function build() {
       const H = prevH * ratio;
       r.itemWidth = H * (r.items[0].shape === 'round' ? 1 : im.w / im.h);
     });
+    // Series marked "large" show every work at the width of Balance 01.
+    if (s.large) rows.forEach(r => { if (r.layout !== 'trio-full') { r.width = 0; r.itemWidth = STAGGER_W; } });
     worksHtml += `<section class="series" id="${s.id}" aria-label="${esc(s.name)}">` + rows.map(r => `<div class="row ${r.layout}${r.side ? ' ' + r.side : ''}${(r.itemWidth && r.itemWidth < 250) || (r.width && r.width < 250) ? ' compact' : ''}">` + r.items.map(w => {
       const i = viewer.length, im = w.imgs[0];
       const sold = w.status === 'Sold';
@@ -320,6 +322,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .row.trio-center .work{width:${u(288)}}
 .row.row-center{justify-content:center;gap:${u(32)}}
 .row.stagger{gap:${u(32)}}.row.stagger.right{justify-content:flex-end}
+.row.trio-center.wide,.row.pair-right.wide{gap:${u(32)}}
 .row.compact figcaption{flex-direction:column;gap:${u(6)}}.row.compact .cap-r{text-align:left;max-width:none}
 .work{display:flex;flex-direction:column;gap:${u(16)}}
 .pic{display:block;width:100%;overflow:hidden;cursor:zoom-in;background:#f3f3f3}
