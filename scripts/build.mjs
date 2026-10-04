@@ -112,7 +112,7 @@ async function build() {
       viewer.push({ slug: w.slug, title: w.title, year: w.year, size: w.size, medium: w.medium, note: w.note || '', price: !sold && w.status === 'Available' ? money(w.price) : '', sold, imgs: w.imgs.map(x => ({ src: x.large, w: x.w, h: x.h })) });
       return `<figure class="work reveal" id="${w.slug}">
   <button class="pic${w.shape === 'round' ? ' round' : ''}" data-i="${i}" aria-label="Open ${esc(w.title)}" style="aspect-ratio:${w.shape === 'round' ? '1/1' : im.w + '/' + im.h}">${img(im, `${w.title}, ${w.year || ''}`, SIZES[r.layout])}</button>
-  <figcaption><div class="cap-l"><p class="t">${esc(w.title)}</p>${!sold && w.status === 'Available' && w.price ? `<p class="t">${money(w.price)}</p>` : ''}${sold ? '<span class="dot" title="Sold"></span>' : ''}</div><div class="cap-r"><p>${esc(w.size ? w.size + ' in' : '')}</p><p>${esc(w.medium)}</p>${w.note ? `<p>${esc(w.note)}</p>` : ''}</div></figcaption>
+  <figcaption><div class="cap-l"><p class="t">${esc(w.title)}</p>${!sold && w.status === 'Available' && w.price ? `<p class="t">${money(w.price)}</p>` : ''}${sold ? '<p class="sold"><span class="dot"></span>Sold</p>' : ''}</div><div class="cap-r"><p>${esc(w.size ? w.size + ' in' : '')}</p><p>${esc(w.medium)}</p>${w.note ? `<p>${esc(w.note)}</p>` : ''}</div></figcaption>
 </figure>`;
     }).join('') + `</div>`).join('') + `</section>`;
   }
@@ -291,7 +291,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 figcaption{display:flex;justify-content:space-between;align-items:flex-start;gap:${u(16)};font-size:${u(14)};line-height:1.35;color:var(--ink2)}
 .cap-l{display:flex;flex-direction:column;gap:${u(4)};min-width:0}
 .cap-l .t{font-family:var(--serif);font-style:italic}
-.dot{display:block;width:${u(9)};height:${u(9)};border-radius:50%;background:var(--dot);margin-top:${u(6)}}
+.sold{display:flex;align-items:center;gap:${u(6)};margin-top:${u(2)};font-size:${u(12)};letter-spacing:.06em;text-transform:uppercase;color:var(--dot)}
+.dot{display:block;width:${u(9)};height:${u(9)};border-radius:50%;background:var(--dot);flex-shrink:0}
 .cap-r{display:flex;flex-direction:column;gap:${u(4)};text-align:right;opacity:.3;flex-shrink:0;max-width:60%}
 
 /* about */
