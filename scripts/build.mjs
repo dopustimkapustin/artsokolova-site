@@ -117,12 +117,23 @@ async function build() {
       const prevH = COLW[prev.layout] * pim.h / pim.w;
       r.width = Math.min(441, prevH * im.w / im.h);
     });
-    worksHtml += `<section class="series" id="${s.id}" aria-label="${esc(s.name)}">` + rows.map(r => `<div class="row ${r.layout}">` + r.items.map(w => {
+    // Small works (up to 16in) after bigger ones in the same series are shown
+    // at their real size relative to those (e.g. 14in next to 30in).
+    rows.forEach((r, k) => {
+      const prev = rows[k - 1];
+      if (!prev || r.width || r.items[0].shape === 'round' || !COLW[prev.layout] || sizeClass(r.items[0].size) !== 'S' || sizeClass(prev.items[0].size) === 'S') return;
+      const pim = prev.items[0].imgs[0], im = r.items[0].imgs[0];
+      const prevH = COLW[prev.layout] * pim.h / pim.w;
+      const ratio = Math.max(...dims(r.items[0].size)) / Math.max(...dims(prev.items[0].size));
+      const H = prevH * ratio;
+      r.itemWidth = H * (r.items[0].shape === 'round' ? 1 : im.w / im.h);
+    });
+    worksHtml += `<section class="series" id="${s.id}" aria-label="${esc(s.name)}">` + rows.map(r => `<div class="row ${r.layout}${(r.itemWidth && r.itemWidth < 250) || (r.width && r.width < 250) ? ' compact' : ''}">` + r.items.map(w => {
       const i = viewer.length, im = w.imgs[0];
       const sold = w.status === 'Sold';
       viewer.push({ slug: w.slug, title: w.title, year: w.year, size: w.size, medium: w.medium, note: w.note || '', price: !sold && w.status === 'Available' ? money(w.price) : '', sold, imgs: w.imgs.map(x => ({ src: x.large, w: x.w, h: x.h })) });
       const rc = r.layout === 'row-center' ? (() => { const f = r.items[0].imgs[0]; const H = 288 * f.h / f.w; return ` style="width:${u(H * im.w / im.h)}"`; })() : '';
-      const flex = rc ? rc : r.width ? ` style="width:${u(r.width)}"` : r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
+      const flex = rc ? rc : r.width ? ` style="width:${u(r.width)}"` : r.itemWidth ? ` style="width:${u(r.itemWidth)}"` : r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
       return `<figure class="work reveal" id="${w.slug}"${flex}>
   <button class="pic${w.shape === 'round' ? ' round' : ''}" data-i="${i}" aria-label="Open ${esc(w.title)}" style="aspect-ratio:${w.shape === 'round' ? '1/1' : im.w + '/' + im.h}">${img(im, `${w.title}, ${w.year || ''}`, SIZES[r.layout])}</button>
   <figcaption><div class="cap-l"><p class="t">${esc(w.title)}</p>${!sold && w.status === 'Available' && w.price ? `<p class="t">${money(w.price)}</p>` : ''}${sold ? '<p class="sold"><span class="dot"></span>Sold</p>' : ''}</div><div class="cap-r"><p>${esc(w.size ? w.size + ' in' : '')}</p><p>${esc(w.medium)}</p>${w.note ? `<p>${esc(w.note)}</p>` : ''}</div></figcaption>
@@ -294,6 +305,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .row.trio-center{justify-content:center;gap:${u(32)}}
 .row.trio-center .work{width:${u(288)}}
 .row.row-center{justify-content:center;gap:${u(32)}}
+.row.compact figcaption{flex-direction:column;gap:${u(6)}}.row.compact .cap-r{text-align:left;max-width:none}
 .work{display:flex;flex-direction:column;gap:${u(16)}}
 .pic{display:block;width:100%;overflow:hidden;cursor:zoom-in;background:#f3f3f3}
 .pic{position:relative;border-radius:0;transition:border-radius .55s var(--ease)}.pic img{width:100%;height:100%;object-fit:cover;transition:transform .9s var(--ease)}
