@@ -1,5 +1,5 @@
 // Builds the static site from content/site.json + content/originals/* into dist/.
-// No framework: one HTML page, responsive images, auto layout per series.
+// Layout follows the Figma file "artsokolova.com" (frame Desktop - 18, 1440px).
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
@@ -7,7 +7,7 @@ import sharp from 'sharp';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const CONTENT = path.join(ROOT, 'content');
 const DIST = path.join(ROOT, 'dist');
-const WIDTHS = [640, 1280, 2000];
+const WIDTHS = [480, 960, 1600, 2400];
 
 const esc = (s = '') => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const slugify = s => s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -16,49 +16,76 @@ const dims = size => (size || '').toLowerCase().replace(/[хx×]/g, 'x').split('
 
 // ---------- images ----------
 const imgCache = new Map();
+let originals;
 async function processImage(name) {
+  if (!name) return null;
   if (imgCache.has(name)) return imgCache.get(name);
-  const files = await fs.readdir(path.join(CONTENT, 'originals'));
-  const file = files.find(f => f.replace(/\.[^.]+$/, '') === name);
+  originals ??= await fs.readdir(path.join(CONTENT, 'originals'));
+  const file = originals.find(f => f.replace(/\.[^.]+$/, '') === name);
   if (!file) { console.warn('missing image', name); imgCache.set(name, null); return null; }
   const src = path.join(CONTENT, 'originals', file);
-  const meta = await sharp(src).rotate().metadata();
-  const w0 = meta.autoOrient?.width ?? meta.width, h0 = meta.autoOrient?.height ?? meta.height;
-  const widths = WIDTHS.filter(w => w < w0).concat(w0 <= 2000 ? [w0] : []).filter((v, i, a) => a.indexOf(v) === i);
+  const meta = await sharp(src).metadata();
+  const rot = (meta.orientation || 1) >= 5;
+  const w0 = rot ? meta.height : meta.width, h0 = rot ? meta.width : meta.height;
+  const widths = [...new Set(WIDTHS.filter(w => w < w0).concat(w0 <= 2400 ? [w0] : [2400]))];
   const out = [];
   for (const w of widths) {
     const fn = `img/${name}-${w}.webp`;
     const dest = path.join(DIST, fn);
-    try { await fs.access(dest); } catch { await sharp(src).rotate().resize({ width: w }).webp({ quality: 82 }).toFile(dest); }
+    try { await fs.access(dest); } catch {
+      await sharp(src).rotate().resize({ width: w }).toColourspace('srgb').webp({ quality: 84 }).toFile(dest);
+    }
     out.push({ w, src: fn });
   }
   const res = { w: w0, h: h0, srcset: out.map(o => `${o.src} ${o.w}w`).join(', '), src: out[Math.min(1, out.length - 1)].src, large: out[out.length - 1].src };
   imgCache.set(name, res);
   return res;
 }
+const img = (im, alt, sizes, extra = '') => im ? `<img src="${im.src}" srcset="${im.srcset}" sizes="${sizes}" width="${im.w}" height="${im.h}" alt="${esc(alt)}" loading="lazy" decoding="async" ${extra}>` : '';
 
-const picture = (im, alt, sizes, cls = '', eager = false) => im ? `<img class="${cls}" src="${im.src}" srcset="${im.srcset}" sizes="${sizes}" width="${im.w}" height="${im.h}" alt="${esc(alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">` : '';
-
-// ---------- auto layout ----------
-// Consecutive works of the same size form a row group. Column count depends on
-// how many works there are and how big they physically are.
-// Size classes: L = 36in+ on the long side, M = 17–35in, S = 16in and under.
+// ---------- layout logic ----------
+// Each series is split into groups of consecutive works of the same size class
+// (L = 36in+ on the long side, M = 17–35in, S = up to 16in). Each group gets one
+// of the compositions used in the Figma design. A work can force a new group with
+// a specific composition via its "layout" field (set in Notion).
+const LAYOUTS = ['grid4', 'pair-wide', 'pair-right', 'single', 'trio-full', 'trio-center'];
 const sizeClass = size => { const d = Math.max(...dims(size), 0); return !d ? 'M' : d >= 36 ? 'L' : d <= 16 ? 'S' : 'M'; };
-function layoutRows(works) {
+function autoLayout(cls, n) {
+  if (n === 1) return 'single';
+  if (n === 2) return cls === 'L' ? 'pair-wide' : 'pair-right';
+  if (n === 3) return cls === 'L' ? 'trio-full' : 'trio-center';
+  if (n === 4) return 'grid4';
+  return cls === 'L' ? 'trio-full' : 'grid4';
+}
+// Split a group into rows without leaving a lonely last work.
+function chunk(items, per) {
+  const rows = [];
+  for (let i = 0; i < items.length; i += per) rows.push(items.slice(i, i + per));
+  const last = rows[rows.length - 1];
+  if (rows.length > 1 && last.length === 1 && per > 2) { const prev = rows[rows.length - 2]; last.unshift(prev.pop()); }
+  return rows;
+}
+function groupWorks(works) {
   const groups = [];
   for (const w of works) {
-    const cls = w.layout || sizeClass(w.size);
+    const cls = sizeClass(w.size);
+    const forced = LAYOUTS.includes(w.layout) ? w.layout : null;
     const last = groups[groups.length - 1];
-    if (last && last.cls === cls) last.items.push(w); else groups.push({ cls, items: [w] });
+    if (last && !forced && last.cls === cls) last.items.push(w);
+    else groups.push({ cls, forced, items: [w] });
   }
-  return groups.map(g => {
-    const n = g.items.length;
-    let cols;
-    if (g.cls === 'L') cols = n <= 3 ? n : (n % 2 === 0 ? 2 : 3);
-    else cols = n <= 4 ? n : (n % 4 === 0 ? 4 : n % 3 === 0 ? 3 : 4);
-    return { ...g, cols, small: g.cls === 'S' };
-  });
+  const rows = [];
+  for (const g of groups) {
+    const layout = g.forced || autoLayout(g.cls, g.items.length);
+    const per = { grid4: 4, 'pair-wide': 2, 'pair-right': 2, single: 1, 'trio-full': 3, 'trio-center': 3 }[layout];
+    for (const items of chunk(g.items, per)) {
+      const l = items.length === per ? layout : items.length === 1 ? 'single' : layout === 'trio-full' ? 'pair-wide' : layout === 'trio-center' ? 'pair-right' : layout;
+      rows.push({ layout: l, items });
+    }
+  }
+  return rows;
 }
+const SIZES = { grid4: '(max-width: 900px) 50vw, 24vw', 'pair-wide': '(max-width: 900px) 100vw, 32vw', 'pair-right': '(max-width: 900px) 50vw, 23vw', single: '(max-width: 900px) 100vw, 33vw', 'trio-full': '(max-width: 900px) 100vw, 32vw', 'trio-center': '(max-width: 900px) 50vw, 22vw' };
 
 // ---------- page ----------
 async function build() {
@@ -67,53 +94,34 @@ async function build() {
   await fs.rm(path.join(DIST, 'index.html'), { force: true });
   await fs.mkdir(path.join(DIST, 'img'), { recursive: true });
   await fs.cp(path.join(ROOT, 'assets'), path.join(DIST, 'assets'), { recursive: true });
+  const logoSvg = (await fs.readFile(path.join(ROOT, 'assets/svg/logo.svg'), 'utf8')).replace(/preserveAspectRatio="none" overflow="visible" style="display: block;" /, 'role="img" aria-label="Alëna Sokolova" ').replace(/fill="var\(--fill-0, black\)"/g, 'fill="currentColor"');
+  const socialSvg = (await fs.readFile(path.join(ROOT, 'assets/svg/instagram.svg'), 'utf8')).replace(/preserveAspectRatio="none" overflow="visible" style="display: block;" /, 'aria-hidden="true" ');
 
   const series = data.series.filter(s => s.show !== false).sort((a, b) => a.order - b.order);
-  const lightbox = []; // flat list for slideshow
-  let seriesHtml = '';
-
+  const viewer = []; // flat list for the slideshow
+  let worksHtml = '';
   for (const s of series) {
     const works = data.works.filter(w => w.series === s.id && w.show !== false && w.images?.length).sort((a, b) => a.order - b.order);
-    if (!works.length) continue;
-    for (const w of works) {
-      w.slug = w.slug || slugify(w.title);
-      w.imgs = (await Promise.all(w.images.map(processImage))).filter(Boolean);
-    }
-    const rows = layoutRows(works.filter(w => w.imgs.length));
-    let rowsHtml = '';
-    for (const r of rows) {
-      const sizes = `(max-width: 700px) ${r.cols >= 3 ? '50vw' : '100vw'}, ${Math.round(100 / r.cols)}vw`;
-      rowsHtml += `<div class="row c${r.cols}${r.small ? ' small' : ''}">` + r.items.map(w => {
-        const idx = lightbox.length;
-        lightbox.push({ slug: w.slug, title: w.title, year: w.year, size: w.size, medium: w.medium, price: w.status === 'Available' ? money(w.price) : '', status: w.status, note: w.note || '', ar: !!w.ar, imgs: w.imgs.map(i => ({ src: i.large, w: i.w, h: i.h })) });
-        const im = w.imgs[0];
-        const status = w.status === 'Sold' ? '<span class="sold">Sold</span>' : w.status === 'On hold' ? '<span class="hold">On hold</span>' : '';
-        return `<figure class="work" id="${w.slug}">
-  <button class="open" data-i="${idx}" aria-label="View ${esc(w.title)}"><span class="frame" style="aspect-ratio:${im.w}/${im.h}">${picture(im, `${w.title}, ${w.year}, ${w.medium}`, sizes)}</span>${w.imgs.length > 1 ? `<span class="count">${w.imgs.length}</span>` : ''}${w.ar ? '<span class="ar">AR</span>' : ''}</button>
-  <figcaption><span class="t">${esc(w.title)}${w.year ? `, ${w.year}` : ''}</span><span class="m">${esc(w.size ? w.size + ' in' : '')}<br>${esc(w.medium)}${w.note ? `<br>${esc(w.note)}` : ''}<br>${status || (w.status === 'Available' && w.price ? `<span class="price">${money(w.price)}</span>` : '')}</span></figcaption>
+    for (const w of works) { w.slug ||= slugify(w.title); w.imgs = (await Promise.all(w.images.map(processImage))).filter(Boolean); }
+    const rows = groupWorks(works.filter(w => w.imgs.length));
+    if (!rows.length) continue;
+    worksHtml += `<section class="series" id="${s.id}" aria-label="${esc(s.name)}">` + rows.map(r => `<div class="row ${r.layout}">` + r.items.map(w => {
+      const i = viewer.length, im = w.imgs[0];
+      const sold = w.status === 'Sold';
+      viewer.push({ slug: w.slug, title: w.title, year: w.year, size: w.size, medium: w.medium, note: w.note || '', price: !sold && w.status === 'Available' ? money(w.price) : '', sold, imgs: w.imgs.map(x => ({ src: x.large, w: x.w, h: x.h })) });
+      return `<figure class="work reveal" id="${w.slug}">
+  <button class="pic" data-i="${i}" aria-label="Open ${esc(w.title)}" style="aspect-ratio:${im.w}/${im.h}">${img(im, `${w.title}, ${w.year || ''}`, SIZES[r.layout])}</button>
+  <figcaption><div class="cap-l"><p class="t">${esc(w.title)}</p>${!sold && w.status === 'Available' && w.price ? `<p class="t">${money(w.price)}</p>` : ''}${sold ? '<span class="dot" title="Sold"></span>' : ''}</div><div class="cap-r"><p>${esc(w.size ? w.size + ' in' : '')}</p><p>${esc(w.medium)}</p>${w.note ? `<p>${esc(w.note)}</p>` : ''}</div></figcaption>
 </figure>`;
-      }).join('') + `</div>`;
-    }
-    seriesHtml += `<section class="series" id="${s.id}">
-  <header class="series-head"><h2>${esc(s.name)}</h2>${s.ar ? '<span class="tag">Includes Augmented Reality</span>' : ''}${s.description ? `<p>${esc(s.description)}</p>` : ''}</header>
-  ${rowsHtml}
-</section>`;
+    }).join('') + `</div>`).join('') + `</section>`;
   }
 
   const hero = await processImage(T.heroImage);
-  const aboutImg = await processImage(T.aboutImage);
-  const arImgs = (await Promise.all((T.arImages || []).map(processImage))).filter(Boolean);
-
-  const cvSections = ['Exhibitions', 'Publications', 'Affiliations', 'Collections'];
-  const cvHtml = cvSections.map(sec => {
-    const rows = data.cv.filter(c => c.section === sec && c.show !== false);
-    if (!rows.length) return '';
-    return `<div class="cv-sec"><h3>${sec === 'Exhibitions' ? 'Selected Exhibitions' : sec}</h3><ul>${rows.map(c => `<li><span class="y">${esc(c.year)}</span><span>${esc(c.entry)}${c.venue ? `, <em>${esc(c.venue)}</em>` : ''}${c.city ? `, ${esc(c.city)}` : ''}</span></li>`).join('')}</ul></div>`;
-  }).join('');
-
-  const nameParts = T.name.toUpperCase().split(' ');
+  const about = await processImage(T.aboutImage);
+  const ar = await processImage(T.arImage);
   const year = new Date().getFullYear();
   const jsonld = { '@context': 'https://schema.org', '@type': 'Person', name: 'Alena Sokolova', jobTitle: 'Painter', url: 'https://artsokolova.com', email: T.email, address: { '@type': 'PostalAddress', addressLocality: 'Boston', addressRegion: 'MA' }, sameAs: [T.instagram, T.facebook, T.artfinder].filter(Boolean) };
+  const mail = `mailto:${esc(T.email)}`;
 
   const html = `<!doctype html>
 <html lang="en">
@@ -132,212 +140,242 @@ ${hero ? `<meta property="og:image" content="${hero.large}">` : ''}
 </head>
 <body>
 <header class="top">
-  <nav><a href="#work">Work</a><a href="#about">About</a><a href="#contact">Contact</a></nav>
+  <div class="wrap top-row">
+    <nav><a href="#work">Work</a><a href="#about">About</a><a href="#contact">Contact</a></nav>
+    <a class="mail" href="${mail}">${esc(T.email)}</a>
+  </div>
+  <div class="wrap line"></div>
 </header>
 
 <section class="hero">
-  <div class="hero-text">
-    <h1>${nameParts.map(p => `<span>${esc(p)}</span>`).join('')}</h1>
-    <p>${esc(T.intro)}</p>
-  </div>
-  <div class="hero-img">${picture(hero, 'Alena Sokolova', '(max-width: 700px) 100vw, 50vw', '', true)}</div>
-  <a class="circle red" href="mailto:${esc(T.email)}">Get<br>in Touch</a>
+  <h1 class="logo">${logoSvg}</h1>
+  <p class="intro">${esc(T.intro)}</p>
+  <div class="hero-photo">${img(hero, 'Alena Sokolova in her studio', '(max-width: 900px) 100vw, 52vw', 'fetchpriority="high" loading="eager"')}</div>
+  <a class="touch" href="${mail}"><span>Get in<br>touch</span></a>
 </section>
 
-${arImgs.length ? `<section class="ar-block" id="ar">
-  <h2 class="label">AR Experience</h2>
-  <div class="ar-stage">
-    <div class="ar-main">${picture(arImgs[0], 'Augmented reality artwork', '(max-width: 700px) 80vw, 40vw')}</div>
-    ${arImgs.slice(1, 5).map((im, i) => `<div class="ar-dot d${i + 1}">${picture(im, 'Artwork in augmented reality', '200px')}</div>`).join('')}
-  </div>
-</section>` : ''}
+<main class="wrap">
+  ${ar ? `<section class="ar" id="ar">
+    <div class="ar-img">${img(ar, 'Paintings from the AR series', '(max-width: 900px) 100vw, 83vw')}</div>
+    <h2 class="h">AR Experience</h2>
+  </section>` : ''}
+  <div class="work-head" id="work"><h2 class="h"><span>Work</span></h2></div>
+  <div class="works">${worksHtml}</div>
 
-<main id="work">
-  <div class="marquee" aria-hidden="true"><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span><span>Work</span></div>
-  ${seriesHtml}
+  <section class="about" id="about">
+    <div class="about-photo reveal">${img(about, 'Alena Sokolova', '(max-width: 900px) 80vw, 30vw')}</div>
+    <div class="about-text">
+      <h2 class="h">About</h2>
+      <div class="about-p">${T.about.split(/\n\s*\n/).map(p => `<p class="reveal">${esc(p)}</p>`).join('')}</div>
+      <div class="btns"><a class="btn" href="${mail}">Get in touch</a>${T.cvUrl ? `<a class="btn" href="${esc(T.cvUrl)}" target="_blank" rel="noopener">Get CV</a>` : ''}</div>
+    </div>
+  </section>
+
+  <footer id="contact">
+    <div class="line"></div>
+    <div class="foot">
+      <p class="copy">© ${year} — Alena Sokolova</p>
+      <span class="social">${socialSvg}${T.instagram ? `<a class="ig" href="${esc(T.instagram)}" target="_blank" rel="noopener" aria-label="Instagram"></a>` : ''}${T.facebook ? `<a class="fb" href="${esc(T.facebook)}" target="_blank" rel="noopener" aria-label="Facebook"></a>` : ''}</span>
+      <a class="mail" href="${mail}">${esc(T.email)}</a>
+    </div>
+  </footer>
 </main>
-
-<section class="about" id="about">
-  <div class="arch">${picture(aboutImg, 'Alena Sokolova in the studio', '(max-width: 700px) 90vw, 40vw')}</div>
-  <div class="about-text">
-    <h2 class="label">About</h2>
-    ${T.about.split(/\n\s*\n/).map(p => `<p>${esc(p)}</p>`).join('')}
-    <div class="btns"><a class="btn dark" href="mailto:${esc(T.email)}">Get in Touch</a>${T.cvUrl ? `<a class="btn" href="${esc(T.cvUrl)}" target="_blank" rel="noopener">Get CV</a>` : ''}</div>
-    <div class="cv">${cvHtml}</div>
-  </div>
-</section>
-
-<footer id="contact">
-  <a class="big-mail" href="mailto:${esc(T.email)}">${esc(T.email)}</a>
-  <div class="foot-row">
-    <span>© ${year} — Alena Sokolova</span>
-    <span class="social">${T.instagram ? `<a href="${esc(T.instagram)}" target="_blank" rel="noopener">Instagram</a>` : ''}${T.facebook ? `<a href="${esc(T.facebook)}" target="_blank" rel="noopener">Facebook</a>` : ''}${T.artfinder ? `<a href="${esc(T.artfinder)}" target="_blank" rel="noopener">Artfinder</a>` : ''}</span>
-  </div>
-</footer>
-
-${T.artfinder ? `<a class="follow" href="${esc(T.artfinder)}" target="_blank" rel="noopener"><b>Follow me</b><i>Artfinder</i></a>` : ''}
-<a class="circle black float" href="mailto:${esc(T.email)}">Get in Touch</a>
 
 <div class="lb" hidden role="dialog" aria-modal="true" aria-label="Artwork viewer">
   <button class="lb-x" aria-label="Close">Close</button>
   <button class="lb-prev" aria-label="Previous">←</button>
   <div class="lb-stage"><img alt=""></div>
   <button class="lb-next" aria-label="Next">→</button>
-  <div class="lb-cap"><div class="t"></div><div class="m"></div><div class="dots"></div><a class="inq" href="#">Inquire</a></div>
+  <div class="lb-cap"><div><p class="t"></p><p class="pr"></p></div><p class="m"></p><a class="btn inq" href="#">Inquire</a></div>
 </div>
 
-<script>window.WORKS=${JSON.stringify(lightbox)};window.EMAIL=${JSON.stringify(T.email)};</script>
+<script>window.WORKS=${JSON.stringify(viewer)};window.EMAIL=${JSON.stringify(T.email)};</script>
 <script>${JS}</script>
 </body>
 </html>`;
   await fs.writeFile(path.join(DIST, 'index.html'), html);
-  console.log(`built: ${lightbox.length} works, ${imgCache.size} images`);
+  console.log(`built: ${viewer.length} works, ${imgCache.size} images`);
 }
+
+// u(x): a Figma pixel value (1440px frame) that scales with the viewport.
+const u = x => `min(${(x / 14.4).toFixed(4)}vw, ${(x * 1.2).toFixed(1)}px)`;
 
 const CSS = String.raw`
 @font-face{font-family:Telegraf;src:url(assets/fonts/PPTelegraf-Regular.woff2) format('woff2');font-weight:400;font-display:swap}
 @font-face{font-family:Writer;src:url(assets/fonts/PPWriter-BookItalic.woff2) format('woff2');font-style:italic;font-weight:300;font-display:swap}
-:root{--pad:46px;--gap:30px;--ink:#0a0a0a;--grey:#a9a9a9;--line:#d6d6d6;--red:#f0154f;--navy:#1e2a38;--sans:Telegraf,Helvetica,Arial,sans-serif;--serif:Writer,'Times New Roman',serif}
+:root{--wrap:${u(1360)};--ink:#000;--ink2:#333;--red:#ff0749;--dot:#ff0000;--sans:Telegraf,Helvetica,Arial,sans-serif;--serif:Writer,'Times New Roman',serif;--ease:cubic-bezier(.2,.7,.1,1)}
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;scroll-padding-top:70px}
-body{font-family:var(--sans);color:var(--ink);background:#fff;font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;scroll-padding-top:${u(80)}}
+body{font-family:var(--sans);color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 img{display:block;max-width:100%;height:auto}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-.top{position:fixed;inset:0 0 auto;z-index:20;background:#fff}
-.top nav{margin:0 var(--pad);height:54px;display:flex;align-items:center;gap:54px;padding-left:28px;border-bottom:1px solid var(--line);text-transform:uppercase;font-size:15px}
-.top nav a:hover{color:var(--red)}
-.hero{position:relative;display:grid;grid-template-columns:1fr 1fr;min-height:100vh;padding-top:54px}
-.hero-text{display:flex;flex-direction:column;justify-content:space-between;padding:48px var(--pad) 40px}
-.hero h1{font-weight:400;font-size:clamp(56px,8.6vw,136px);line-height:1;letter-spacing:-.01em}
-.hero h1 span{display:block}
-.hero-text p{max-width:470px;font-size:18px;margin-top:40px}
-.hero-img{position:relative;overflow:hidden;background:#f4f4f4}
-.hero-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.circle{display:flex;align-items:center;justify-content:center;text-align:center;border-radius:50%;font-family:var(--serif);font-style:italic;color:#fff;line-height:1.05;transition:transform .3s}
-.circle:hover{transform:scale(1.06)}
-.circle.red{position:absolute;left:50%;bottom:9%;transform:translateX(-60%);width:162px;height:162px;background:var(--red);font-size:26px}
-.circle.red:hover{transform:translateX(-60%) scale(1.06)}
-.circle.black{position:fixed;right:28px;bottom:80px;z-index:15;width:130px;height:130px;background:#000;font-size:17px}
-.follow{position:fixed;left:0;bottom:170px;z-index:15;background:var(--navy);color:#fff;padding:8px 46px 8px 14px;line-height:1.1;overflow:hidden}
-.follow b{display:block;font-size:22px;font-weight:700}
-.follow i{font-style:normal;color:var(--red);font-size:14px;font-weight:700}
-.follow::after{content:'';position:absolute;right:-12px;bottom:-14px;width:58px;height:58px;border-radius:50%;background:var(--red)}
-.label{font-weight:400;text-transform:uppercase;font-size:15px;letter-spacing:.02em}
-.ar-block{padding:120px var(--pad) 60px;text-align:center}
-.ar-stage{position:relative;max-width:1180px;margin:50px auto 0;aspect-ratio:16/8}
-.ar-main{position:absolute;left:50%;top:50%;width:40%;transform:translate(-50%,-50%)}
-.ar-dot{position:absolute;width:19%;aspect-ratio:1;border-radius:50%;overflow:hidden}
-.ar-dot img{width:100%;height:100%;object-fit:cover}
-.ar-dot.d1{left:2%;top:4%}.ar-dot.d2{left:9%;top:60%}.ar-dot.d3{right:2%;top:4%}.ar-dot.d4{right:9%;top:56%;opacity:.55}
-.marquee{overflow:hidden;white-space:nowrap;font-family:var(--serif);font-style:italic;font-size:clamp(70px,11vw,170px);line-height:1.2;padding:40px 0 10px;pointer-events:none}
-.marquee span{display:inline-block;padding-right:.5em;animation:mq 22s linear infinite}
-@keyframes mq{to{transform:translateX(-100%)}}
-@media (prefers-reduced-motion:reduce){.marquee span{animation:none}}
-.series{padding:70px var(--pad) 40px}
-.series-head{max-width:760px;margin:0 auto 56px;text-align:center}
-.series-head h2{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(34px,4vw,56px);line-height:1.1}
-.series-head p{color:#555;margin-top:18px}
-.tag{display:inline-block;margin-top:14px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--ink);border-radius:20px;padding:3px 12px}
-.row{display:grid;gap:var(--gap);align-items:end;margin:0 auto 70px}
-.row.c4{grid-template-columns:repeat(4,1fr)}
-.row.c3{grid-template-columns:repeat(3,1fr)}
-.row.c2{grid-template-columns:repeat(2,1fr);max-width:1060px;gap:56px}
-.row.c1{grid-template-columns:1fr;max-width:520px}
-.row.small{max-width:900px}
-.row.small.c4{max-width:1100px}
-.open{position:relative;display:block;width:100%;cursor:zoom-in}
-.frame{display:block;overflow:hidden;background:#f6f6f6}
-.frame img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.7,.2,1)}
-.open:hover .frame img{transform:scale(1.025)}
-.count,.ar{position:absolute;top:10px;font-size:12px;line-height:1;padding:6px 8px;border-radius:20px;background:#fff}
-.count{right:10px}.ar{left:10px;background:#000;color:#fff}
-figcaption{display:flex;justify-content:space-between;gap:16px;margin-top:18px;font-size:17px;line-height:1.5}
-figcaption .t{font-family:var(--serif);font-style:italic;font-size:19px;line-height:1.35;max-width:55%}
-figcaption .m{color:var(--grey);text-align:right}
-.price{color:var(--ink)}
-.sold,.hold{color:var(--red)}
-.sold::before,.hold::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:6px;vertical-align:1px}
-.hold{color:#c08a00}.hold::before{background:#e0a800}
-.about{display:grid;grid-template-columns:1fr 1fr;gap:80px;padding:120px var(--pad);align-items:start}
-.arch{border-radius:999px 999px 0 0;overflow:hidden;position:sticky;top:90px;max-width:560px;justify-self:center;width:100%;aspect-ratio:3/4}
-.arch img{width:100%;height:100%;object-fit:cover}
-.about-text{max-width:620px}
-.about-text p{margin-top:22px;font-size:18px}
-.btns{display:flex;gap:14px;margin-top:36px;flex-wrap:wrap}
-.btn{border:1px solid var(--ink);border-radius:40px;padding:12px 26px;font-family:var(--serif);font-style:italic;font-size:19px}
-.btn.dark{background:var(--ink);color:#fff}
-.btn:hover{background:var(--red);border-color:var(--red);color:#fff}
-.cv{margin-top:64px}
-.cv-sec{margin-top:36px}
-.cv-sec h3{font-family:var(--serif);font-style:italic;font-weight:300;font-size:24px;margin-bottom:10px}
-.cv li{list-style:none;display:grid;grid-template-columns:110px 1fr;gap:14px;padding:10px 0;border-top:1px solid var(--line);font-size:16px}
-.cv li .y{color:var(--grey)}
-.cv em{font-style:normal;color:#555}
-footer{padding:80px var(--pad) 40px;border-top:1px solid var(--line);margin:0 var(--pad);padding-left:0;padding-right:0}
-.big-mail{font-family:var(--serif);font-style:italic;font-size:clamp(34px,6vw,96px);line-height:1.1;word-break:break-word}
-.big-mail:hover{color:var(--red)}
-.foot-row{display:flex;justify-content:space-between;gap:20px;margin-top:60px;color:var(--grey);font-size:15px;flex-wrap:wrap}
-.social{display:flex;gap:28px}.social a:hover{color:var(--ink)}
+.wrap{width:var(--wrap);margin:0 auto}
+.line{height:1px;background:var(--ink)}
+.mail{font-size:${u(16)};text-decoration:underline;text-underline-offset:.15em;text-decoration-thickness:1px}
+.mail:hover{color:var(--red)}
+.h{font-family:var(--serif);font-style:italic;font-weight:300;font-size:${u(36)};line-height:1.35;text-transform:uppercase;text-align:center}
+
+/* header */
+.top{position:fixed;inset:0 0 auto;z-index:30;background:#fff;padding-top:${u(20)}}
+.top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:${u(20)}}
+.top nav{display:flex;gap:${u(44)};font-size:${u(15)};line-height:1.35;text-transform:uppercase}
+.top nav a,.top .mail{transition:opacity .18s}.top nav a:hover,.top .mail:hover{opacity:.45;color:inherit}
+
+/* hero */
+.hero{position:relative;height:${u(802)}}
+.logo{position:absolute;left:${u(40)};top:${u(109)};width:${u(543)};line-height:0;color:var(--ink)}
+.logo svg{width:100%;height:auto;overflow:visible}
+.intro{position:absolute;left:${u(40)};top:${u(639)};width:${u(427)};font-size:${u(21)};line-height:1.45}
+.hero-photo{position:absolute;left:calc(50% - ${u(20)});top:${u(60)};right:0;height:${u(742)};overflow:hidden;background:#eee}
+.hero-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 0}
+.touch{position:absolute;left:calc(33.333% + ${u(104)});top:${u(557)};width:${u(187)};height:${u(187)};border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);z-index:2;transition:transform .5s var(--ease)}
+.touch span{font-family:var(--serif);font-style:italic;font-size:${u(30.2)};line-height:1.12;text-transform:uppercase;text-align:center}
+.touch:hover{transform:rotate(2deg) scale(1.06)}
+
+/* AR */
+.ar{display:flex;flex-direction:column;align-items:center;gap:${u(32)};padding-top:${u(120)};margin-top:${u(0)}}
+.ar-img{position:relative;width:${u(1191)};height:${u(541)};overflow:hidden}
+.ar-img img{position:absolute;width:114.24%;height:110.17%;max-width:none;left:-9.89%;top:-6.84%}
+
+/* WORK label */
+.work-head{position:relative;height:${u(107)};display:flex;align-items:flex-end;justify-content:center;margin-top:${u(100)};pointer-events:none}
+
+
+/* works */
+.works{display:flex;flex-direction:column;gap:${u(160)};margin-top:${u(100)}}
+.series{display:flex;flex-direction:column;gap:${u(160)}}
+.row{display:flex;align-items:flex-start;gap:${u(20)}}
+.row.grid4{gap:${u(20)};flex-wrap:wrap;row-gap:${u(32)}}
+.row.grid4 .work{width:${u(325)}}
+.series .row.grid4+.row.grid4{margin-top:${u(-128)}}
+.row.pair-wide{justify-content:space-between}
+.row.pair-wide .work{width:${u(427)}}
+.row.single{justify-content:center}
+.row.single .work{width:${u(441)}}
+.row.single figcaption{gap:${u(88)}}
+.row.pair-right{justify-content:flex-end;gap:${u(32)}}
+.row.pair-right .work{width:${u(310)}}
+.row.trio-full{gap:${u(32)}}
+.row.trio-full .work{flex:1 1 0}
+.row.trio-center{justify-content:center;gap:${u(32)}}
+.row.trio-center .work{width:${u(288)}}
+.work{display:flex;flex-direction:column;gap:${u(16)}}
+.pic{display:block;width:100%;overflow:hidden;cursor:zoom-in;background:#f3f3f3}
+.pic{transition:transform .3s ease}.pic img{width:100%;height:100%;object-fit:cover}
+.work:hover .pic{transform:translateY(-6px)}
+figcaption{display:flex;justify-content:space-between;align-items:flex-start;gap:${u(16)};font-size:${u(14)};line-height:1.35;color:var(--ink2)}
+.cap-l{display:flex;flex-direction:column;gap:${u(4)};min-width:0}
+.cap-l .t{font-family:var(--serif);font-style:italic}
+.dot{display:block;width:${u(9)};height:${u(9)};border-radius:50%;background:var(--dot);margin-top:${u(6)}}
+.cap-r{display:flex;flex-direction:column;gap:${u(4)};text-align:right;opacity:.3;flex-shrink:0;max-width:60%}
+
+/* about */
+.about{position:relative;display:grid;grid-template-columns:${u(116)} ${u(426)} 1fr;margin-top:${u(120)};min-height:${u(569)}}
+.about-photo{grid-column:2;height:${u(569)};border-radius:${u(228.5)};overflow:hidden;background:#eee}
+.about-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 100%}
+.about-text{grid-column:3;margin-left:${u(159)};width:${u(543)};display:flex;flex-direction:column;gap:${u(44)}}
+.about-text .h{text-align:left}
+.about-p{display:flex;flex-direction:column;gap:${u(22)};font-size:${u(18)};line-height:1.35}
+.btns{display:flex;gap:${u(10)};margin-top:${u(20)}}
+.btn{display:inline-flex;align-items:center;justify-content:center;width:${u(155)};height:${u(32)};border-radius:${u(12)};background:#000;color:#fff;font-size:${u(12)};text-transform:uppercase;line-height:1;transition:background .3s}
+.btn{border:1px solid #000}.btn:hover{background:#fff;color:#000}
+
+/* footer */
+footer{margin-top:${u(120)};padding-bottom:${u(20)};display:flex;flex-direction:column;gap:${u(20)}}
+.foot{display:flex;align-items:flex-end;justify-content:space-between}
+.copy{font-size:${u(16)};opacity:.3;width:${u(326)}}
+.social{position:relative;display:block;width:${u(37.6)};height:${u(16)}}
+.social svg{width:100%;height:100%}
+.social a{position:absolute;top:0;bottom:0}
+.social .ig{left:0;width:45%}.social .fb{right:0;width:35%}
+.social:hover svg{opacity:.6}
+
+/* reveal animation */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity 1s var(--ease),transform 1.2s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+.js-off .reveal{opacity:1;transform:none}
+.hero .logo path{transform:translateY(30px);opacity:0;animation:up 1.2s var(--ease) .15s forwards}
+.intro{opacity:0;animation:fade 1.2s var(--ease) .6s forwards}
+.hero-photo img{transform:scale(1.08);animation:settle 2.2s var(--ease) forwards}
+.touch{opacity:0;animation:pop .9s var(--ease) .9s forwards}
+@keyframes up{to{transform:none;opacity:1}}
+@keyframes fade{to{opacity:1}}
+@keyframes settle{to{transform:scale(1)}}
+@keyframes pop{from{opacity:0;transform:rotate(-30deg) scale(.6)}to{opacity:1;transform:rotate(-8deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){.reveal,.hero .logo path,.intro,.hero-photo img,.touch{animation:none!important;opacity:1!important;transform:none!important}.touch{transform:rotate(-8deg)!important}}
+
+/* viewer */
 .lb{position:fixed;inset:0;z-index:50;background:#fff;display:grid;grid-template-columns:80px 1fr 80px;grid-template-rows:1fr auto}
 .lb[hidden]{display:none}
-.lb-stage{grid-column:2;display:flex;align-items:center;justify-content:center;padding:60px 0 20px;min-height:0}
-.lb-stage img{max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain;box-shadow:0 10px 40px rgba(0,0,0,.08)}
-.lb-prev,.lb-next{font-size:30px;align-self:center}
+.lb-stage{grid-column:2;display:flex;align-items:center;justify-content:center;padding:70px 0 20px;min-height:0}
+.lb-stage img{max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain}
+.lb-prev,.lb-next{font-size:28px;align-self:center}
 .lb-prev{grid-column:1;grid-row:1}.lb-next{grid-column:3;grid-row:1}
+.lb-x{position:absolute;top:20px;right:40px;font-size:15px;text-transform:uppercase}
 .lb-prev:hover,.lb-next:hover,.lb-x:hover{color:var(--red)}
-.lb-x{position:absolute;top:18px;right:var(--pad);text-transform:uppercase;font-size:15px}
-.lb-cap{grid-column:2;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding:10px 0 34px}
-.lb-cap .t{font-family:var(--serif);font-style:italic;font-size:22px}
-.lb-cap .m{color:var(--grey);flex:1}
-.lb-cap .dots{display:flex;gap:6px}
-.lb-cap .dots button{width:9px;height:9px;border-radius:50%;background:var(--line)}
-.lb-cap .dots button.on{background:var(--ink)}
-.inq{border:1px solid var(--ink);border-radius:40px;padding:8px 20px;font-family:var(--serif);font-style:italic;font-size:17px;white-space:nowrap}
-.inq:hover{background:var(--red);border-color:var(--red);color:#fff}
-@media (max-width:1100px){.row.c4{grid-template-columns:repeat(3,1fr)}.row.c4.small{grid-template-columns:repeat(4,1fr)}}
-@media (max-width:900px){:root{--pad:24px;--gap:22px}.row.c4,.row.c3{grid-template-columns:repeat(2,1fr)}.row.c4.small{grid-template-columns:repeat(2,1fr)}.about{grid-template-columns:1fr;gap:50px}.arch{position:relative;top:0;max-width:440px}}
-@media (max-width:700px){
-  :root{--pad:16px;--gap:16px}
-  body{font-size:15px}
-  .top nav{gap:28px;padding-left:0;font-size:14px;height:50px}
-  .hero{grid-template-columns:1fr;min-height:0;padding-top:50px}
-  .hero-text{padding:28px var(--pad) 24px}
-  .hero h1{font-size:clamp(48px,15vw,76px)}
-  .hero-text p{font-size:16px;margin-top:22px}
-  .hero-img{aspect-ratio:4/5}
-  .circle.red{left:auto;right:16px;bottom:auto;top:calc(50px + 28px);transform:none;width:104px;height:104px;font-size:18px}
-  .circle.red:hover{transform:scale(1.06)}
-  .circle.black{width:86px;height:86px;font-size:13px;right:14px;bottom:18px}
-  .follow{bottom:18px;padding:6px 34px 6px 10px}.follow b{font-size:16px}.follow i{font-size:11px}.follow::after{width:40px;height:40px;right:-10px;bottom:-12px}
-  .ar-block{padding:70px var(--pad) 20px}.ar-stage{aspect-ratio:1/1;margin-top:30px}.ar-main{width:62%}.ar-dot{width:26%}
-  .series{padding:46px var(--pad) 10px}.series-head{margin-bottom:34px}
-  .row{margin-bottom:46px}
-  .row.c2,.row.c1{grid-template-columns:1fr;gap:40px}
-  .row.small.c2{grid-template-columns:repeat(2,1fr);gap:16px}
-  figcaption{flex-direction:column;gap:4px;margin-top:10px;font-size:13px}
-  figcaption .t{max-width:none;font-size:16px}
-  figcaption .m{text-align:left}
-  .row.c1 figcaption,.row.c2:not(.small) figcaption{flex-direction:row;font-size:14px}
-  .row.c1 figcaption .m,.row.c2:not(.small) figcaption .m{text-align:right}
-  .about{padding:70px var(--pad)}.about-text p{font-size:16px}
-  .cv li{grid-template-columns:80px 1fr;font-size:14px}
-  footer{padding:50px 0 110px}
-  .lb{grid-template-columns:1fr;grid-template-rows:1fr auto}
-  .lb-stage{grid-column:1;padding:56px 12px 10px}
-  .lb-prev,.lb-next{display:none}
-  .lb-cap{grid-column:1;flex-wrap:wrap;padding:10px 16px 24px}.lb-cap .m{flex-basis:100%;order:3}
+.lb-cap{grid-column:2;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding:12px 0 30px;font-size:14px;color:var(--ink2)}
+.lb-cap .t,.lb-cap .pr{font-family:var(--serif);font-style:italic;font-size:16px}
+.lb-cap .m{opacity:.4;flex:1;text-align:right}
+.lb-cap .btn{width:auto;padding:0 18px;font-size:12px;height:32px;border-radius:12px}
+
+/* mobile */
+@media (max-width:900px){
+  :root{--wrap:calc(100vw - 32px)}
+  .mail{font-size:14px}
+  .h{font-size:28px}
+  .top{padding-top:14px}.top-row{margin-bottom:14px}.top nav{gap:22px;font-size:13px}
+  .top .mail{font-size:13px}
+  .hero{height:auto;min-height:700px;padding:86px 16px 32px}
+  .logo{position:relative;left:0;top:0;width:88%;z-index:3}
+  .intro{position:relative;left:0;top:0;width:100%;margin-top:400px;font-size:15px;z-index:3}
+  .top .mail{display:none}
+  .hero-photo{top:220px;left:auto;right:0;width:75%;height:340px}
+  .touch{left:56%;top:462px;width:104px;height:104px}
+  .touch span{font-size:16px}
+  .ar{padding-top:72px;gap:16px}
+  .ar-img{width:100%;height:auto;aspect-ratio:1191/541}
+  .work-head{height:64px;margin-top:56px}
+  .works,.series{gap:64px}
+  .works{margin-top:40px}
+  .row,.row.grid4,.row.pair-right,.row.trio-full,.row.trio-center{flex-wrap:wrap;gap:28px 12px;justify-content:space-between}
+  .series .row.grid4+.row.grid4{margin-top:-36px}
+  .row.grid4 .work,.row.pair-right .work,.row.trio-center .work{width:calc(50% - 6px)}
+  .row.pair-wide .work,.row.single .work,.row.trio-full .work{width:100%;flex:none}
+  .row.single figcaption{gap:16px}
+  .work{gap:10px}
+  figcaption{font-size:12px;flex-direction:column;gap:4px}
+  .cap-r{text-align:left;max-width:none}
+  .row.pair-wide figcaption,.row.single figcaption,.row.trio-full figcaption{flex-direction:row;font-size:13px}
+  .row.pair-wide .cap-r,.row.single .cap-r,.row.trio-full .cap-r{text-align:right}
+  .dot{width:8px;height:8px}
+  .about{display:flex;flex-direction:column;gap:36px;margin-top:80px}
+  .about-photo{width:72%;height:auto;aspect-ratio:426/569;border-radius:999px;align-self:center}
+  .about-text{margin:0;width:100%;gap:24px}
+  .about-p{font-size:16px;gap:16px}
+  .btns{margin-top:8px}.btn{width:150px;height:36px;font-size:12px;border-radius:12px}
+  footer{margin-top:72px;gap:16px}
+  .foot{flex-wrap:wrap;gap:14px;align-items:center}
+  .copy{width:auto;font-size:13px;order:3;flex-basis:100%}
+  .social{width:38px;height:16px}
+  .lb{grid-template-columns:1fr}.lb-stage{grid-column:1;padding:56px 12px 10px}.lb-prev,.lb-next{display:none}
+  .lb-x{right:16px;top:16px}
+  .lb-cap{grid-column:1;flex-wrap:wrap;padding:10px 16px 24px}.lb-cap .m{flex-basis:100%;order:3;text-align:left}
 }`;
 
 const JS = String.raw`
-(()=>{const W=window.WORKS,lb=document.querySelector('.lb'),img=lb.querySelector('.lb-stage img'),t=lb.querySelector('.lb-cap .t'),m=lb.querySelector('.lb-cap .m'),dots=lb.querySelector('.dots'),inq=lb.querySelector('.inq');let i=0,j=0;
-function show(){const w=W[i],im=w.imgs[j];img.src=im.src;img.width=im.w;img.height=im.h;img.alt=w.title;t.textContent=w.title+(w.year?', '+w.year:'');m.textContent=[w.size&&w.size+' in',w.medium,w.note,w.status==='Sold'?'Sold':w.price].filter(Boolean).join(' · ');dots.innerHTML=w.imgs.length>1?w.imgs.map((_,k)=>'<button class="'+(k===j?'on':'')+'" data-k="'+k+'" aria-label="Image '+(k+1)+'"></button>').join(''):'';inq.style.display=w.status==='Sold'?'none':'';inq.href='mailto:'+window.EMAIL+'?subject='+encodeURIComponent('Inquiry: '+w.title);history.replaceState(null,'','#'+w.slug);const n=W[(i+1)%W.length];if(n){const p=new Image();p.src=n.imgs[0].src}}
-function open(k){i=k;j=0;lb.hidden=false;document.body.style.overflow='hidden';show();lb.querySelector('.lb-x').focus()}
+(()=>{
+// reveal on scroll
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.reveal').forEach((el,i)=>{const row=el.parentElement;const k=row?[...row.children].indexOf(el):0;el.style.transitionDelay=(k*0.08)+'s';io.observe(el)});
+// slideshow
+const W=window.WORKS,lb=document.querySelector('.lb'),im=lb.querySelector('.lb-stage img'),t=lb.querySelector('.lb-cap .t'),pr=lb.querySelector('.lb-cap .pr'),m=lb.querySelector('.lb-cap .m'),inq=lb.querySelector('.inq');let i=0,j=0;
+function show(){const w=W[i],x=w.imgs[j];im.src=x.src;im.width=x.w;im.height=x.h;im.alt=w.title;t.textContent=w.title+(w.year?', '+w.year:'');pr.textContent=w.sold?'Sold':w.price;m.textContent=[w.size&&w.size+' in',w.medium,w.note].filter(Boolean).join(' · ');inq.style.display=w.sold?'none':'';inq.href='mailto:'+window.EMAIL+'?subject='+encodeURIComponent('Inquiry: '+w.title);history.replaceState(null,'','#'+w.slug);const n=W[(i+1)%W.length];if(n){new Image().src=n.imgs[0].src}}
+function open(k){i=k;j=0;lb.hidden=false;document.body.style.overflow='hidden';show()}
 function close(){lb.hidden=true;document.body.style.overflow='';history.replaceState(null,'',location.pathname);document.getElementById(W[i].slug)?.scrollIntoView({block:'center'})}
-function step(d){const w=W[i];if(j+d>=0&&j+d<w.imgs.length){j+=d}else{i=(i+d+W.length)%W.length;j=d>0?0:W[i].imgs.length-1}show()}
-document.querySelectorAll('.open').forEach(b=>b.addEventListener('click',()=>open(+b.dataset.i)));
+function step(d){const w=W[i];if(j+d>=0&&j+d<w.imgs.length)j+=d;else{i=(i+d+W.length)%W.length;j=d>0?0:W[i].imgs.length-1}show()}
+document.querySelectorAll('.pic').forEach(b=>b.addEventListener('click',()=>open(+b.dataset.i)));
 lb.querySelector('.lb-x').onclick=close;lb.querySelector('.lb-prev').onclick=()=>step(-1);lb.querySelector('.lb-next').onclick=()=>step(1);
-dots.onclick=e=>{if(e.target.dataset.k){j=+e.target.dataset.k;show()}};
 lb.querySelector('.lb-stage').onclick=e=>{if(e.target===e.currentTarget)close()};
 addEventListener('keydown',e=>{if(lb.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')step(1);if(e.key==='ArrowLeft')step(-1)});
 let x0=null;lb.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});lb.addEventListener('touchend',e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)step(dx<0?1:-1);x0=null});

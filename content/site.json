@@ -10,72 +10,665 @@
     "facebook": "https://www.facebook.com/profile.php?id=100068643016046",
     "artfinder": "http://www.artfinder.com/artist/artsokolova/",
     "cvUrl": "https://drive.google.com/file/d/1bcHj1ULHfJe-3IpW7pVTkixkhhEs61eO/view?usp=sharing",
-    "heroImage": "ar-hero",
-    "aboutImage": "ladybugs-wall",
-    "arImages": ["ar-hero", "ladybugs-ar", "butterflies-ar", "dragonflies-ar", "balance-01-ar"]
+    "heroImage": "hero-alena",
+    "aboutImage": "about-alena",
+    "arImage": "ar-composition"
   },
   "series": [
-    { "id": "twelve-months", "name": "Twelve Months", "order": 1, "ar": false, "description": "A visual calendar in which each painting embodies a month through its symbolic flower and ruling planet. A single black line runs through all twelve canvases, an unseen force connecting them, while graphic signs of code and repetition create a sense of ordered chaos." },
-    { "id": "digital-flora", "name": "Digital Flora", "order": 2, "ar": false, "description": "The classical floral still life placed in dialogue with the visual language of the digital age. Hyperrealistic oil painting meets luminous lines, layered textures, and saturated color, asking where the real ends and the constructed begins." },
-    { "id": "fibonaccis-secret-garden", "name": "Fibonacci's Secret Garden", "order": 3, "ar": false, "description": "" },
-    { "id": "the-babylonian-gardens", "name": "The Babylonian Gardens", "order": 4, "ar": false, "description": "" },
-    { "id": "digital-flora-ar-series", "name": "Digital Flora — AR Series", "order": 5, "ar": true, "description": "Butterflies, ladybugs, dragonflies, and bumblebees, painted in oil in the tradition of the Old Dutch masters, come to life in Augmented Reality and continue to exist in digital space." },
-    { "id": "balance", "name": "Balance", "order": 6, "ar": true, "description": "A visual metaphor for the search for stability amid the emotional and informational overload of contemporary life. Flowers, butterflies, droplets, and scales float against a black ground that recalls both a screen and the void, and the compositions unfold further in augmented reality." },
-    { "id": "memories", "name": "Memories", "order": 7, "ar": false, "description": "Cyanotype, one of the earliest photographic processes, forms an unstable, light-touched imprint of memory; over it, flowers are painted in oil with the focus of classical still life. A circle of metallic leaf shifts with the viewer's gaze, adding a third layer of time." }
+    {
+      "id": "twelve-months",
+      "name": "Twelve Months",
+      "order": 1,
+      "ar": false,
+      "description": "A visual calendar in which each painting embodies a month through its symbolic flower and ruling planet. A single black line runs through all twelve canvases, an unseen force connecting them, while graphic signs of code and repetition create a sense of ordered chaos."
+    },
+    {
+      "id": "digital-flora",
+      "name": "Digital Flora",
+      "order": 2,
+      "ar": false,
+      "description": "The classical floral still life placed in dialogue with the visual language of the digital age. Hyperrealistic oil painting meets luminous lines, layered textures, and saturated color, asking where the real ends and the constructed begins."
+    },
+    {
+      "id": "fibonaccis-secret-garden",
+      "name": "Fibonacci's Secret Garden",
+      "order": 3,
+      "ar": false,
+      "description": ""
+    },
+    {
+      "id": "the-babylonian-gardens",
+      "name": "The Babylonian Gardens",
+      "order": 4,
+      "ar": false,
+      "description": ""
+    },
+    {
+      "id": "digital-flora-ar-series",
+      "name": "Digital Flora — AR Series",
+      "order": 5,
+      "ar": true,
+      "description": "Butterflies, ladybugs, dragonflies, and bumblebees, painted in oil in the tradition of the Old Dutch masters, come to life in Augmented Reality and continue to exist in digital space."
+    },
+    {
+      "id": "balance",
+      "name": "Balance",
+      "order": 6,
+      "ar": true,
+      "description": "A visual metaphor for the search for stability amid the emotional and informational overload of contemporary life. Flowers, butterflies, droplets, and scales float against a black ground that recalls both a screen and the void, and the compositions unfold further in augmented reality."
+    },
+    {
+      "id": "memories",
+      "name": "Memories",
+      "order": 7,
+      "ar": false,
+      "description": "Cyanotype, one of the earliest photographic processes, forms an unstable, light-touched imprint of memory; over it, flowers are painted in oil with the focus of classical still life. A circle of metallic leaf shifts with the viewer's gaze, adding a third layer of time."
+    }
   ],
   "works": [
-    { "title": "Twelve Months, 1/12, Saturn", "series": "twelve-months", "order": 1, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-1"] },
-    { "title": "Twelve Months, 2/12, Uranus", "series": "twelve-months", "order": 2, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-2"] },
-    { "title": "Twelve Months, 3/12, Neptune", "series": "twelve-months", "order": 3, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-3"] },
-    { "title": "Twelve Months, 4/12, Mars", "series": "twelve-months", "order": 4, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-4"] },
-    { "title": "Twelve Months, 5/12, Venus", "series": "twelve-months", "order": 5, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-5"] },
-    { "title": "Twelve Months, 6/12, Mercury", "series": "twelve-months", "order": 6, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-6"] },
-    { "title": "Twelve Months, 7/12, Moon", "series": "twelve-months", "order": 7, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-7"] },
-    { "title": "Twelve Months, 8/12, Sun", "series": "twelve-months", "order": 8, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-8"] },
-    { "title": "Twelve Months, 9/12, Mercury", "series": "twelve-months", "order": 9, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-9"] },
-    { "title": "Twelve Months, 10/12, Venus", "series": "twelve-months", "order": 10, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-10"] },
-    { "title": "Twelve Months, 11/12, Pluto", "series": "twelve-months", "order": 11, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-11"] },
-    { "title": "Twelve Months, 12/12, Jupiter", "series": "twelve-months", "order": 12, "year": 2025, "size": "28x22", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["twelve-months-12"] },
-    { "title": "Digital Flora No. 1", "series": "digital-flora", "order": 1, "year": 2024, "size": "48x36", "medium": "Oil, metallic leaf, canvas", "price": 4000, "status": "Available", "images": ["digital-flora-no-1"] },
-    { "title": "Digital Flora No. 2", "series": "digital-flora", "order": 2, "year": 2024, "size": "48x36", "medium": "Oil, metallic leaf, canvas", "price": 4000, "status": "Available", "images": ["digital-flora-no-2"] },
-    { "title": "Digital Flora No. 3", "series": "digital-flora", "order": 3, "year": 2024, "size": "28x20", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["digital-flora-no-3"] },
-    { "title": "Digital Flora No. 4", "series": "digital-flora", "order": 4, "year": 2024, "size": "28x20", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["digital-flora-no-4"] },
-    { "title": "Digital Flora No. 5", "series": "digital-flora", "order": 5, "year": 2024, "size": "28x20", "medium": "Oil, metallic leaf, canvas", "price": 1000, "status": "Available", "images": ["digital-flora-no-5"] },
-    { "title": "Digital Flora No. 6", "series": "digital-flora", "order": 6, "year": 2026, "size": "12x12", "medium": "Oil, metallic leaf, canvas", "price": 500, "status": "Available", "images": [] },
-    { "title": "Digital Flora No. 7", "series": "digital-flora", "order": 7, "year": 2026, "size": "12x12", "medium": "Oil, metallic leaf, canvas", "price": 500, "status": "Available", "images": [] },
-    { "title": "Digital Flora No. 8", "series": "digital-flora", "order": 8, "year": 2026, "size": "12x12", "medium": "Oil, metallic leaf, canvas", "price": 500, "status": "Available", "images": [] },
-    { "title": "Fibonacci's Secret Garden No. 1", "series": "fibonaccis-secret-garden", "order": 1, "year": 2024, "size": "72x48", "medium": "Oil, metallic leaf, canvas", "price": 6000, "status": "Available", "images": ["fibonaccis-secret-garden-no-1"] },
-    { "title": "Fibonacci's Secret Garden No. 2", "series": "fibonaccis-secret-garden", "order": 2, "year": 2025, "size": "72x48", "medium": "Oil, metallic leaf, canvas", "price": 6000, "status": "Available", "images": ["fibonaccis-secret-garden-no-2"] },
-    { "title": "The Babylonian Gardens No. 1", "series": "the-babylonian-gardens", "order": 1, "year": 2024, "size": "28x20", "medium": "Mixed media, canvas", "price": 1200, "status": "Available", "images": [] },
-    { "title": "The Babylonian Gardens No. 2", "series": "the-babylonian-gardens", "order": 2, "year": 2024, "size": "28x20", "medium": "Mixed media, canvas", "price": 1200, "status": "Available", "images": [] },
-    { "title": "Ladybugs", "series": "digital-flora-ar-series", "order": 1, "year": 2024, "size": "36x36", "medium": "Mixed media, canvas", "price": 4000, "status": "Available", "ar": true, "images": ["ladybugs", "ladybugs-ar"] },
-    { "title": "Dragonflies", "series": "digital-flora-ar-series", "order": 2, "year": 2024, "size": "36x36", "medium": "Mixed media, canvas", "status": "Sold", "ar": true, "images": ["dragonflies", "dragonflies-ar"] },
-    { "title": "Butterflies", "series": "digital-flora-ar-series", "order": 3, "year": 2024, "size": "36x36", "medium": "Mixed media, canvas", "price": 4000, "status": "Available", "ar": true, "images": ["butterflies", "butterflies-ar"] },
-    { "title": "Bumblebees", "series": "digital-flora-ar-series", "order": 4, "year": 2026, "size": "36x36", "medium": "Mixed media, canvas", "price": 4000, "status": "Available", "ar": true, "images": ["bumblebees"] },
-    { "title": "Balance 01", "series": "balance", "order": 1, "year": 2025, "size": "36x48", "medium": "Mixed media, canvas", "price": 4000, "status": "Available", "ar": true, "images": ["balance-01", "balance-01-ar"] },
-    { "title": "Balance 02", "series": "balance", "order": 2, "year": 2025, "size": "48x48", "medium": "Mixed media, canvas", "price": 4000, "status": "Available", "images": ["balance-02"] },
-    { "title": "Balance 03", "series": "balance", "order": 3, "year": 2025, "size": "36x48", "medium": "Mixed media, canvas", "price": 4000, "status": "Available", "images": ["balance-03"] },
-    { "title": "Balance 04", "series": "balance", "order": 4, "year": 2025, "size": "20x24", "medium": "Mixed media, canvas", "price": 1500, "status": "Available", "images": ["balance-04"] },
-    { "title": "Balance 05", "series": "balance", "order": 5, "year": 2025, "size": "20x24", "medium": "Mixed media, canvas", "price": 1500, "status": "Available", "images": ["balance-05"] },
-    { "title": "Balance 06", "series": "balance", "order": 6, "year": 2025, "size": "20x24", "medium": "Mixed media, canvas", "price": 1500, "status": "Available", "images": ["balance-06"] },
-    { "title": "Balance 07", "series": "balance", "order": 7, "year": 2025, "size": "35x48", "medium": "Screen print", "price": 300, "status": "Available", "note": "Edition of 10, price per print", "images": ["balance-07", "balance-07-detail"] },
-    { "title": "Memories No. 1", "series": "memories", "order": 1, "year": 2026, "size": "24x30", "medium": "Cyanotype, oil, metallic leaf, canvas", "price": 2000, "status": "Available", "images": ["memories-no-1"] },
-    { "title": "Memories No. 2", "series": "memories", "order": 2, "year": 2026, "size": "24x30", "medium": "Cyanotype, oil, metallic leaf, canvas", "price": 2000, "status": "Available", "images": ["memories-no-2"] },
-    { "title": "Memories No. 3", "series": "memories", "order": 3, "year": 2026, "size": "24x30", "medium": "Cyanotype, oil, metallic leaf, canvas", "price": 2000, "status": "Available", "images": ["memories-no-3"] },
-    { "title": "Memories No. 4", "series": "memories", "order": 4, "year": 2026, "size": "14x14", "medium": "Cyanotype, oil, metallic leaf, canvas", "price": 500, "status": "Available", "images": ["memories-no-4"] },
-    { "title": "Memories No. 5", "series": "memories", "order": 5, "year": 2026, "size": "14x14", "medium": "Cyanotype, oil, metallic leaf, canvas", "price": 500, "status": "Available", "images": ["memories-no-5"] }
+    {
+      "title": "Twelve Months, 1/12, Saturn",
+      "series": "twelve-months",
+      "order": 1,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-1"
+      ]
+    },
+    {
+      "title": "Twelve Months, 2/12, Uranus",
+      "series": "twelve-months",
+      "order": 2,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-2"
+      ]
+    },
+    {
+      "title": "Twelve Months, 3/12, Neptune",
+      "series": "twelve-months",
+      "order": 3,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-3"
+      ]
+    },
+    {
+      "title": "Twelve Months, 4/12, Mars",
+      "series": "twelve-months",
+      "order": 4,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-4"
+      ]
+    },
+    {
+      "title": "Twelve Months, 5/12, Venus",
+      "series": "twelve-months",
+      "order": 5,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-5"
+      ]
+    },
+    {
+      "title": "Twelve Months, 6/12, Mercury",
+      "series": "twelve-months",
+      "order": 6,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-6"
+      ]
+    },
+    {
+      "title": "Twelve Months, 7/12, Moon",
+      "series": "twelve-months",
+      "order": 7,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-7"
+      ]
+    },
+    {
+      "title": "Twelve Months, 8/12, Sun",
+      "series": "twelve-months",
+      "order": 8,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-8"
+      ]
+    },
+    {
+      "title": "Twelve Months, 9/12, Mercury",
+      "series": "twelve-months",
+      "order": 9,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-9"
+      ]
+    },
+    {
+      "title": "Twelve Months, 10/12, Venus",
+      "series": "twelve-months",
+      "order": 10,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-10"
+      ]
+    },
+    {
+      "title": "Twelve Months, 11/12, Pluto",
+      "series": "twelve-months",
+      "order": 11,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-11"
+      ]
+    },
+    {
+      "title": "Twelve Months, 12/12, Jupiter",
+      "series": "twelve-months",
+      "order": 12,
+      "year": 2025,
+      "size": "28x22",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "twelve-months-12"
+      ]
+    },
+    {
+      "title": "Digital Flora No. 1",
+      "series": "digital-flora",
+      "order": 1,
+      "year": 2024,
+      "size": "48x36",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 4000,
+      "status": "Available",
+      "images": [
+        "digital-flora-no-1"
+      ]
+    },
+    {
+      "title": "Digital Flora No. 2",
+      "series": "digital-flora",
+      "order": 2,
+      "year": 2024,
+      "size": "48x36",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 4000,
+      "status": "Available",
+      "images": [
+        "digital-flora-no-2"
+      ]
+    },
+    {
+      "title": "Digital Flora No. 3",
+      "series": "digital-flora",
+      "order": 3,
+      "year": 2024,
+      "size": "28x20",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "digital-flora-no-3"
+      ]
+    },
+    {
+      "title": "Digital Flora No. 4",
+      "series": "digital-flora",
+      "order": 4,
+      "year": 2024,
+      "size": "28x20",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "digital-flora-no-4"
+      ]
+    },
+    {
+      "title": "Digital Flora No. 5",
+      "series": "digital-flora",
+      "order": 5,
+      "year": 2024,
+      "size": "28x20",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 1000,
+      "status": "Available",
+      "images": [
+        "digital-flora-no-5"
+      ]
+    },
+    {
+      "title": "Digital Flora No. 6",
+      "series": "digital-flora",
+      "order": 6,
+      "year": 2026,
+      "size": "12x12",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 500,
+      "status": "Available",
+      "images": [
+        "digital-flora-no-6"
+      ]
+    },
+    {
+      "title": "Digital Flora No. 7",
+      "series": "digital-flora",
+      "order": 7,
+      "year": 2026,
+      "size": "12x12",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 500,
+      "status": "Available",
+      "images": [
+        "digital-flora-no-7"
+      ]
+    },
+    {
+      "title": "Digital Flora No. 8",
+      "series": "digital-flora",
+      "order": 8,
+      "year": 2026,
+      "size": "12x12",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 500,
+      "status": "Available",
+      "images": [
+        "digital-flora-no-8"
+      ]
+    },
+    {
+      "title": "Fibonacci's Secret Garden No. 1",
+      "series": "fibonaccis-secret-garden",
+      "order": 1,
+      "year": 2024,
+      "size": "72x48",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 6000,
+      "status": "Available",
+      "images": [
+        "fibonaccis-secret-garden-no-1"
+      ]
+    },
+    {
+      "title": "Fibonacci's Secret Garden No. 2",
+      "series": "fibonaccis-secret-garden",
+      "order": 2,
+      "year": 2025,
+      "size": "72x48",
+      "medium": "Oil, metallic leaf, canvas",
+      "price": 6000,
+      "status": "Available",
+      "images": [
+        "fibonaccis-secret-garden-no-2"
+      ]
+    },
+    {
+      "title": "The Babylonian Gardens No. 1",
+      "series": "the-babylonian-gardens",
+      "order": 1,
+      "year": 2024,
+      "size": "28x20",
+      "medium": "Mixed media, canvas",
+      "price": 1200,
+      "status": "Available",
+      "images": [
+        "the-babylonian-gardens-no-1"
+      ]
+    },
+    {
+      "title": "The Babylonian Gardens No. 2",
+      "series": "the-babylonian-gardens",
+      "order": 2,
+      "year": 2024,
+      "size": "28x20",
+      "medium": "Mixed media, canvas",
+      "price": 1200,
+      "status": "Available",
+      "images": [
+        "the-babylonian-gardens-no-2"
+      ]
+    },
+    {
+      "title": "Ladybugs",
+      "series": "digital-flora-ar-series",
+      "order": 1,
+      "year": 2024,
+      "size": "36x36",
+      "medium": "Mixed media, canvas",
+      "price": 4000,
+      "status": "Available",
+      "ar": true,
+      "images": [
+        "ladybugs"
+      ]
+    },
+    {
+      "title": "Dragonflies",
+      "series": "digital-flora-ar-series",
+      "order": 2,
+      "year": 2024,
+      "size": "36x36",
+      "medium": "Mixed media, canvas",
+      "status": "Sold",
+      "ar": true,
+      "images": [
+        "dragonflies"
+      ]
+    },
+    {
+      "title": "Butterflies",
+      "series": "digital-flora-ar-series",
+      "order": 3,
+      "year": 2024,
+      "size": "36x36",
+      "medium": "Mixed media, canvas",
+      "price": 4000,
+      "status": "Available",
+      "ar": true,
+      "images": [
+        "butterflies"
+      ]
+    },
+    {
+      "title": "Bumblebees",
+      "series": "digital-flora-ar-series",
+      "order": 4,
+      "year": 2026,
+      "size": "36x36",
+      "medium": "Mixed media, canvas",
+      "price": 4000,
+      "status": "Available",
+      "ar": true,
+      "images": [
+        "bumblebees"
+      ]
+    },
+    {
+      "title": "Balance 01",
+      "series": "balance",
+      "order": 1,
+      "year": 2025,
+      "size": "36x48",
+      "medium": "Mixed media, canvas",
+      "price": 4000,
+      "status": "Available",
+      "ar": true,
+      "images": [
+        "balance-01"
+      ]
+    },
+    {
+      "title": "Balance 02",
+      "series": "balance",
+      "order": 2,
+      "year": 2025,
+      "size": "48x48",
+      "medium": "Mixed media, canvas",
+      "price": 4000,
+      "status": "Available",
+      "images": [
+        "balance-02"
+      ]
+    },
+    {
+      "title": "Balance 03",
+      "series": "balance",
+      "order": 3,
+      "year": 2025,
+      "size": "36x48",
+      "medium": "Mixed media, canvas",
+      "price": 4000,
+      "status": "Available",
+      "images": [
+        "balance-03"
+      ]
+    },
+    {
+      "title": "Balance 04",
+      "series": "balance",
+      "order": 4,
+      "year": 2025,
+      "size": "20x24",
+      "medium": "Mixed media, canvas",
+      "price": 1500,
+      "status": "Available",
+      "images": [
+        "balance-04"
+      ]
+    },
+    {
+      "title": "Balance 05",
+      "series": "balance",
+      "order": 5,
+      "year": 2025,
+      "size": "20x24",
+      "medium": "Mixed media, canvas",
+      "price": 1500,
+      "status": "Available",
+      "images": [
+        "balance-05"
+      ]
+    },
+    {
+      "title": "Balance 06",
+      "series": "balance",
+      "order": 6,
+      "year": 2025,
+      "size": "20x24",
+      "medium": "Mixed media, canvas",
+      "price": 1500,
+      "status": "Available",
+      "images": [
+        "balance-06"
+      ]
+    },
+    {
+      "title": "Balance 07",
+      "series": "balance",
+      "order": 7,
+      "year": 2025,
+      "size": "35x48",
+      "medium": "Screen print",
+      "price": 300,
+      "status": "Available",
+      "note": "Edition of 10, price per print",
+      "images": [
+        "balance-07"
+      ]
+    },
+    {
+      "title": "Memories No. 1",
+      "series": "memories",
+      "order": 1,
+      "year": 2026,
+      "size": "24x30",
+      "medium": "Cyanotype, oil, metallic leaf, canvas",
+      "price": 2000,
+      "status": "Available",
+      "images": [
+        "memories-no-1"
+      ]
+    },
+    {
+      "title": "Memories No. 2",
+      "series": "memories",
+      "order": 2,
+      "year": 2026,
+      "size": "24x30",
+      "medium": "Cyanotype, oil, metallic leaf, canvas",
+      "price": 2000,
+      "status": "Available",
+      "images": [
+        "memories-no-2"
+      ]
+    },
+    {
+      "title": "Memories No. 3",
+      "series": "memories",
+      "order": 3,
+      "year": 2026,
+      "size": "24x30",
+      "medium": "Cyanotype, oil, metallic leaf, canvas",
+      "price": 2000,
+      "status": "Available",
+      "images": [
+        "memories-no-3"
+      ]
+    },
+    {
+      "title": "Memories No. 4",
+      "series": "memories",
+      "order": 4,
+      "year": 2026,
+      "size": "14x14",
+      "medium": "Cyanotype, oil, metallic leaf, canvas",
+      "price": 500,
+      "status": "Available",
+      "images": [
+        "memories-no-4"
+      ]
+    },
+    {
+      "title": "Memories No. 5",
+      "series": "memories",
+      "order": 5,
+      "year": 2026,
+      "size": "14x14",
+      "medium": "Cyanotype, oil, metallic leaf, canvas",
+      "price": 500,
+      "status": "Available",
+      "images": [
+        "memories-no-5"
+      ]
+    }
   ],
   "cv": [
-    { "section": "Exhibitions", "year": "2026", "entry": "Annual Woman Artists Exhibition", "venue": "Dacia Gallery", "city": "New York, NY" },
-    { "section": "Exhibitions", "year": "2025", "entry": "The Hidden Gardens", "venue": "Huntington Theatre", "city": "Boston, MA" },
-    { "section": "Exhibitions", "year": "2025", "entry": "FLORILEGIA", "venue": "Hunchback Gallery", "city": "Worcester, MA" },
-    { "section": "Exhibitions", "year": "2025", "entry": "Unfiltered Femininity", "venue": "Mary Cosgrove Dolphin Gallery, Worcester State University", "city": "Worcester, MA" },
-    { "section": "Exhibitions", "year": "2024", "entry": "The Mind of an Artist", "venue": "Sims Contemporary", "city": "New York, NY" },
-    { "section": "Exhibitions", "year": "2019–2021", "entry": "Contemporary Art Auctions", "venue": "DorDor Gallery", "city": "Moscow, Russia" },
-    { "section": "Exhibitions", "year": "2020", "entry": "Auction", "venue": "Lit-Fund Gallery", "city": "Moscow, Russia" },
-    { "section": "Exhibitions", "year": "2019", "entry": "Kot Art Fest", "venue": "", "city": "Moscow, Russia" },
-    { "section": "Publications", "year": "2026", "entry": "Studio Visit Book Vol. 7", "venue": "Arts to Hearts Project", "city": "" },
-    { "section": "Collections", "year": "", "entry": "Private collections in the US, UK, Russia, and Europe", "venue": "", "city": "" },
-    { "section": "Affiliations", "year": "Since 2024", "entry": "Member, SoWa Artists Studios", "venue": "", "city": "Boston, MA" }
+    {
+      "section": "Exhibitions",
+      "year": "2026",
+      "entry": "Annual Woman Artists Exhibition",
+      "venue": "Dacia Gallery",
+      "city": "New York, NY"
+    },
+    {
+      "section": "Exhibitions",
+      "year": "2025",
+      "entry": "The Hidden Gardens",
+      "venue": "Huntington Theatre",
+      "city": "Boston, MA"
+    },
+    {
+      "section": "Exhibitions",
+      "year": "2025",
+      "entry": "FLORILEGIA",
+      "venue": "Hunchback Gallery",
+      "city": "Worcester, MA"
+    },
+    {
+      "section": "Exhibitions",
+      "year": "2025",
+      "entry": "Unfiltered Femininity",
+      "venue": "Mary Cosgrove Dolphin Gallery, Worcester State University",
+      "city": "Worcester, MA"
+    },
+    {
+      "section": "Exhibitions",
+      "year": "2024",
+      "entry": "The Mind of an Artist",
+      "venue": "Sims Contemporary",
+      "city": "New York, NY"
+    },
+    {
+      "section": "Exhibitions",
+      "year": "2019–2021",
+      "entry": "Contemporary Art Auctions",
+      "venue": "DorDor Gallery",
+      "city": "Moscow, Russia"
+    },
+    {
+      "section": "Exhibitions",
+      "year": "2020",
+      "entry": "Auction",
+      "venue": "Lit-Fund Gallery",
+      "city": "Moscow, Russia"
+    },
+    {
+      "section": "Exhibitions",
+      "year": "2019",
+      "entry": "Kot Art Fest",
+      "venue": "",
+      "city": "Moscow, Russia"
+    },
+    {
+      "section": "Publications",
+      "year": "2026",
+      "entry": "Studio Visit Book Vol. 7",
+      "venue": "Arts to Hearts Project",
+      "city": ""
+    },
+    {
+      "section": "Collections",
+      "year": "",
+      "entry": "Private collections in the US, UK, Russia, and Europe",
+      "venue": "",
+      "city": ""
+    },
+    {
+      "section": "Affiliations",
+      "year": "Since 2024",
+      "entry": "Member, SoWa Artists Studios",
+      "venue": "",
+      "city": "Boston, MA"
+    }
   ]
 }
