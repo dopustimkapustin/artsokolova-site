@@ -49,7 +49,17 @@ const img = (im, alt, sizes, extra = '') => im ? `<img src="${im.src}" srcset="$
 // (L = 36in+ on the long side, M = 17–35in, S = up to 16in). Each group gets one
 // of the compositions used in the Figma design. A work can force a new group with
 // a specific composition via its "layout" field (set in Notion).
-const LAYOUTS = ['grid4', 'pair-wide', 'pair-right', 'single', 'trio-full', 'trio-center', 'row-center'];
+function staggerWidth(data) {
+  // equal-height trio across 1360 - 2*32: width of its first work
+  for (const s of [...data.series].sort((a, b) => a.order - b.order)) {
+    const ws = data.works.filter(w => w.series === s.id && w.show !== false && w.imgs?.length).sort((a, b) => a.order - b.order);
+    const rows = groupWorks(ws);
+    const r = rows.find(r => r.layout === 'trio-full' && r.items.length === 3);
+    if (r) { const as = r.items.map(w => w.imgs[0].w / w.imgs[0].h); return (1360 - 64) / as.reduce((a, b) => a + b) * as[0]; }
+  }
+  return 385;
+}
+const LAYOUTS = ['grid4', 'pair-wide', 'pair-right', 'single', 'trio-full', 'trio-center', 'row-center', 'stagger'];
 const sizeClass = size => { const d = Math.max(...dims(size), 0); return !d ? 'M' : d >= 36 ? 'L' : d <= 16 ? 'S' : 'M'; };
 function autoLayout(cls, n) {
   if (n === 1) return 'single';
@@ -79,8 +89,10 @@ function groupWorks(works) {
   const rows = [];
   for (const g of groups) {
     const layout = g.forced || autoLayout(g.cls, g.items.length);
-    const per = { grid4: 4, 'pair-wide': 2, 'pair-right': 2, single: 1, 'trio-full': 3, 'trio-center': 3, 'row-center': 99 }[layout];
+    const per = { grid4: 4, 'pair-wide': 2, 'pair-right': 2, single: 1, 'trio-full': 3, 'trio-center': 3, 'row-center': 99, stagger: 2 }[layout];
+    let si = 0;
     for (const items of chunk(g.items, per)) {
+      if (layout === 'stagger') { rows.push({ layout, items, side: si++ % 2 ? 'right' : 'left' }); continue; }
       const l = items.length === per ? layout : items.length === 1 ? 'single' : layout === 'trio-full' ? 'pair-wide' : layout === 'trio-center' ? 'pair-right' : layout;
       rows.push({ layout: l, items });
     }
@@ -100,6 +112,7 @@ async function build() {
   const socialSvg = (await fs.readFile(path.join(ROOT, 'assets/svg/instagram.svg'), 'utf8')).replace(/preserveAspectRatio="none" overflow="visible" style="display: block;" /, 'aria-hidden="true" ');
 
   const series = data.series.filter(s => s.show !== false).sort((a, b) => a.order - b.order);
+  for (const w of data.works) if (w.images?.length) { w.slug ||= slugify(w.title); w.imgs = (await Promise.all(w.images.map(processImage))).filter(Boolean); }
   const viewer = []; // flat list for the slideshow
   let worksHtml = '';
   for (const s of series) {
@@ -109,6 +122,7 @@ async function build() {
     if (!rows.length) continue;
     // A lone work after a row of smaller ones matches their height instead of
     // being blown up to full single-column width.
+    const STAGGER_W = staggerWidth(data);
     const COLW = { grid4: 325, 'pair-wide': 427, 'pair-right': 310, single: 441, 'trio-center': 288 };
     rows.forEach((r, k) => {
       const prev = rows[k - 1];
@@ -128,12 +142,12 @@ async function build() {
       const H = prevH * ratio;
       r.itemWidth = H * (r.items[0].shape === 'round' ? 1 : im.w / im.h);
     });
-    worksHtml += `<section class="series" id="${s.id}" aria-label="${esc(s.name)}">` + rows.map(r => `<div class="row ${r.layout}${(r.itemWidth && r.itemWidth < 250) || (r.width && r.width < 250) ? ' compact' : ''}">` + r.items.map(w => {
+    worksHtml += `<section class="series" id="${s.id}" aria-label="${esc(s.name)}">` + rows.map(r => `<div class="row ${r.layout}${r.side ? ' ' + r.side : ''}${(r.itemWidth && r.itemWidth < 250) || (r.width && r.width < 250) ? ' compact' : ''}">` + r.items.map(w => {
       const i = viewer.length, im = w.imgs[0];
       const sold = w.status === 'Sold';
       viewer.push({ slug: w.slug, title: w.title, year: w.year, size: w.size, medium: w.medium, note: w.note || '', price: !sold && w.status === 'Available' ? money(w.price) : '', sold, imgs: w.imgs.map(x => ({ src: x.large, w: x.w, h: x.h })) });
       const rc = r.layout === 'row-center' ? (() => { const f = r.items[0].imgs[0]; const H = 288 * f.h / f.w; return ` style="width:${u(H * im.w / im.h)}"`; })() : '';
-      const flex = rc ? rc : r.width ? ` style="width:${u(r.width)}"` : r.itemWidth ? ` style="width:${u(r.itemWidth)}"` : r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
+      const flex = r.layout === 'stagger' ? ` style="width:${u(STAGGER_W)}"` : rc ? rc : r.width ? ` style="width:${u(r.width)}"` : r.itemWidth ? ` style="width:${u(r.itemWidth)}"` : r.layout === 'trio-full' ? ` style="flex:${(w.shape === 'round' ? 1 : im.w / im.h).toFixed(4)} 1 0"` : '';
       return `<figure class="work reveal" id="${w.slug}"${flex}>
   <button class="pic${w.shape === 'round' ? ' round' : ''}" data-i="${i}" aria-label="Open ${esc(w.title)}" style="aspect-ratio:${w.shape === 'round' ? '1/1' : im.w + '/' + im.h}">${img(im, `${w.title}, ${w.year || ''}`, SIZES[r.layout])}</button>
   <figcaption><div class="cap-l"><p class="t">${esc(w.title)}</p>${!sold && w.status === 'Available' && w.price ? `<p class="t">${money(w.price)}</p>` : ''}${sold ? '<p class="sold"><span class="dot"></span>Sold</p>' : ''}</div><div class="cap-r"><p>${esc(w.size ? w.size + ' in' : '')}</p><p>${esc(w.medium)}</p>${w.note ? `<p>${esc(w.note)}</p>` : ''}</div></figcaption>
@@ -305,6 +319,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .row.trio-center{justify-content:center;gap:${u(32)}}
 .row.trio-center .work{width:${u(288)}}
 .row.row-center{justify-content:center;gap:${u(32)}}
+.row.stagger{gap:${u(32)}}.row.stagger.right{justify-content:flex-end}
 .row.compact figcaption{flex-direction:column;gap:${u(6)}}.row.compact .cap-r{text-align:left;max-width:none}
 .work{display:flex;flex-direction:column;gap:${u(16)}}
 .pic{display:block;width:100%;overflow:hidden;cursor:zoom-in;background:#f3f3f3}
@@ -394,10 +409,11 @@ footer{margin-top:${u(120)};padding-bottom:${u(20)};display:flex;flex-direction:
   .work-head{height:64px;margin-top:56px}
   .works,.series{gap:64px}
   .works{margin-top:40px}
-  .row,.row.grid4,.row.pair-right,.row.trio-full,.row.trio-center,.row.row-center{flex-wrap:wrap;gap:28px 12px;justify-content:space-between}
+  .row,.row.grid4,.row.pair-right,.row.trio-full,.row.trio-center,.row.row-center,.row.stagger{flex-wrap:wrap;gap:28px 12px;justify-content:space-between}
   .series .row.grid4+.row.grid4{margin-top:-36px}
   .row.grid4 .work,.row.pair-right .work,.row.trio-center .work,.row.row-center .work{width:calc(50% - 6px)!important}
   .row.pair-wide .work,.row.single .work,.row.trio-full .work{width:100%;flex:none}
+  .row.stagger .work{width:calc(50% - 6px)!important}
   .row.single figcaption{gap:16px}
   .work{gap:10px}
   figcaption{font-size:12px;flex-direction:column;gap:4px}

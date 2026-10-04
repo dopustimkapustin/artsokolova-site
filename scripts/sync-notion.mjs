@@ -96,7 +96,7 @@ async function main() {
     works.push({
       title, slug, series: seriesById[rel(p, 'Series')[0]] || '', order: num(p, 'Order') ?? 99, year: num(p, 'Year'),
       size: text(p, 'Size (in)'), medium: text(p, 'Medium'), price: num(p, 'Price'), status: sel(p, 'Status') || 'Available',
-      ar: box(p, 'AR'), note: text(p, 'Note'), show: box(p, 'Show on site'), shape: sel(p, 'Shape').toLowerCase() === 'round' ? 'round' : undefined, layout: ({ 'Auto': undefined, '4 in a row': 'grid4', 'Pair at edges': 'pair-wide', 'Pair right': 'pair-right', 'Single center': 'single', 'Three full width': 'trio-full', 'Three center': 'trio-center', 'One row center': 'row-center' })[sel(p, 'Layout')], joinPrev: box(p, 'Same row as previous') || undefined, images,
+      ar: box(p, 'AR'), note: text(p, 'Note'), show: box(p, 'Show on site'), shape: sel(p, 'Shape').toLowerCase() === 'round' ? 'round' : undefined, layout: ({ 'Auto': undefined, '4 in a row': 'grid4', 'Pair at edges': 'pair-wide', 'Pair right': 'pair-right', 'Single center': 'single', 'Three full width': 'trio-full', 'Three center': 'trio-center', 'One row center': 'row-center', 'Pairs staggered': 'stagger' })[sel(p, 'Layout')], joinPrev: box(p, 'Same row as previous') || undefined, images,
     });
   }
 

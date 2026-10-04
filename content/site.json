@@ -393,7 +393,8 @@
       "ar": true,
       "images": [
         "ladybugs"
-      ]
+      ],
+      "layout": "stagger"
     },
     {
       "title": "Dragonflies",
