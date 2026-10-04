@@ -224,8 +224,10 @@ ${hero ? `<meta property="og:image" content="${hero.large}">` : ''}
       <h2 class="h">AR Experience</h2>
     </div>
   </section>
+  <div class="work-wrap">
   <div class="work-head" id="work"><h2 class="h"><span>Work</span></h2></div>
   <div class="works">${worksHtml}</div>
+  </div>
 
   <section class="about" id="about">
     <div class="about-photo reveal">${img(about, 'Alena Sokolova', '(max-width: 900px) 80vw, 30vw')}</div>
@@ -291,9 +293,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .top-row nav{display:flex;gap:${u(44)};font-size:${u(15)};line-height:1.35;text-transform:uppercase}
 .top-row nav a,.top .mail{transition:opacity .18s}.top-row nav a:hover,.top .mail:hover{opacity:.45;color:inherit}
 
-.subnav{position:absolute;left:0;right:0;top:100%;display:flex;gap:${u(5.6)};padding-top:${u(10)};opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .35s,transform .45s var(--ease)}
+.subnav{position:absolute;left:0;right:0;top:100%;display:flex;gap:${u(7.3)};padding-top:${u(10)};opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .35s,transform .45s var(--ease)}
 .top.sub-on .subnav{opacity:1;transform:none;pointer-events:auto}
-.subnav a{display:inline-flex;align-items:center;height:${u(22.4)};padding:0 ${u(11.2)};border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);font-size:${u(9.1)};letter-spacing:.02em;text-transform:uppercase;line-height:1;white-space:nowrap;transition:background .25s,color .25s}
+.subnav a{display:inline-flex;align-items:center;height:${u(29.1)};padding:0 ${u(14.6)};border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);font-size:${u(11.8)};letter-spacing:.02em;text-transform:uppercase;line-height:1;white-space:nowrap;transition:background .25s,color .25s}
 .subnav a:hover{border-color:#000}
 .subnav a.on{background:#000;color:#fff;border-color:#000}
 /* hero */
@@ -324,14 +326,14 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.ar{height:auto}.ar-pin{position:relative;height:auto;padding:${u(120)} 0 0}.ar-3d,.ar-dot{--t:1!important;--c:1!important}}
 
 /* WORK label */
-.work-head{position:relative;height:${u(107)};display:flex;align-items:flex-end;justify-content:center;margin-top:${u(100)};pointer-events:none}
+.work-wrap{position:relative}
+.work-head{position:sticky;top:calc(50vh - ${u(24)});z-index:0;display:flex;justify-content:center;margin-top:${u(150)};pointer-events:none}
 
 
 /* works */
-.works{display:flex;flex-direction:column;gap:${u(160)};margin-top:${u(100)}}
-.series{display:flex;flex-direction:column;gap:${u(160)}}
+.works{position:relative;z-index:1;display:flex;flex-direction:column;gap:${u(160)};margin-top:${u(100)}}
+.series{display:flex;flex-direction:column;gap:${u(40)}}
 .row{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:${u(20)};align-items:start}
-.series .row.grid4+.row.grid4{margin-top:${u(-128)}}
 .row.trio-full{display:flex;gap:${u(20)}}
 .row.trio-full .work{flex:1 1 0}
 .row.single figcaption{gap:${u(40)}}
@@ -406,7 +408,7 @@ footer{margin-top:${u(120)};padding-bottom:${u(20)};display:flex;flex-direction:
   .mail{font-size:14px}
   .h{font-size:28px}
   .subnav{overflow-x:auto;scrollbar-width:none;padding:8px 16px 0;width:100%;gap:5px}.subnav::-webkit-scrollbar{display:none}
-  .subnav a{height:24px;padding:0 10px;font-size:10px}
+  .subnav a{height:28px;padding:0 12px;font-size:11px}
   .top{padding-top:14px}.top-row{margin-bottom:14px}.top-row nav{gap:22px;font-size:13px}
   .top .mail{font-size:13px}
   .hero{height:auto;min-height:700px;padding:86px 16px 32px}
@@ -423,12 +425,11 @@ footer{margin-top:${u(120)};padding-bottom:${u(20)};display:flex;flex-direction:
   .ar-dot{width:26vw;height:26vw}
   .ar-dot.d1{left:0;top:0;--dx:20vw;--dy:20vw}.ar-dot.d3{right:0;top:0;--dx:-20vw;--dy:20vw}
   .ar-dot.d2{left:0;top:auto;bottom:0;--dx:20vw;--dy:-20vw}.ar-dot.d4{right:0;top:auto;bottom:0;--dx:-20vw;--dy:-20vw}
-  .work-head{height:64px;margin-top:56px}
-  .works,.series{gap:64px}
+  .work-head{top:calc(50vh - 20px);margin-top:72px}
+  .works{gap:64px}.series{gap:35px}
   .works{margin-top:40px}
   .row,.row.grid4,.row.pair-right,.row.trio-full,.row.trio-center,.row.row-center,.row.stagger{display:flex;flex-wrap:wrap;gap:28px 12px;justify-content:space-between}
   .row .work{grid-column:auto!important}
-  .series .row.grid4+.row.grid4{margin-top:-36px}
   .row.grid4 .work,.row.pair-right .work,.row.trio-center .work,.row.row-center .work{width:calc(50% - 6px)!important}
   .row.pair-wide .work,.row.single .work,.row.trio-full .work{width:100%;flex:none}
   .row.stagger .work{width:calc(50% - 6px)!important}
