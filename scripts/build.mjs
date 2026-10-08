@@ -179,7 +179,7 @@ async function build() {
   const about = await processImage(T.aboutImage);
   const ar = await processImage(T.arImage);
   const year = new Date().getFullYear();
-  const jsonld = { '@context': 'https://schema.org', '@type': 'Person', name: 'Alena Sokolova', jobTitle: 'Painter', url: 'https://artsokolova.com', email: T.email, address: { '@type': 'PostalAddress', addressLocality: 'Boston', addressRegion: 'MA' }, sameAs: [T.instagram, T.facebook, T.artfinder].filter(Boolean) };
+  const jsonld = { '@context': 'https://schema.org', '@type': 'Person', name: 'Alena Sokolova', jobTitle: 'Contemporary painter', description: T.metaDescription, url: 'https://artsokolova.com', knowsAbout: ['Oil painting', 'Botanical painting', 'Metallic leaf', 'Cyanotype'], memberOf: { '@type': 'Organization', name: 'SoWa Artists Studios' }, email: T.email, address: { '@type': 'PostalAddress', addressLocality: 'Boston', addressRegion: 'MA' }, sameAs: [T.instagram, T.facebook, T.artfinder, 'https://www.artmajeur.com/alena-sokolova'].filter(Boolean) };
   const mail = `mailto:${esc(T.email)}`;
 
   const html = `<!doctype html>
@@ -189,6 +189,7 @@ async function build() {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(T.title)}</title>
 <meta name="description" content="${esc(T.metaDescription)}">
+<link rel="canonical" href="https://artsokolova.com/">
 <meta property="og:title" content="${esc(T.title)}">
 <meta property="og:description" content="${esc(T.metaDescription)}">
 ${hero ? `<meta property="og:image" content="${hero.large}">` : ''}
